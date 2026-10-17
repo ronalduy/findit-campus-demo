@@ -212,3 +212,196 @@
     width: min(640px, 100%);
   }
 }
+
+/* FindIT Campus: true edge-to-edge ID camera in landscape. The previous rules
+   styled :fullscreen only, but the app had not called requestFullscreen or
+   applied landscape-id-layout; these selectors support fullscreen and fallback. */
+#cameraModal:fullscreen,
+#cameraModal:-webkit-full-screen,
+#cameraModal.camera-fullscreen-fallback {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  overflow: hidden !important;
+  z-index: 2147483000 !important;
+  display: flex !important;
+  align-items: stretch !important;
+  justify-content: stretch !important;
+  background: #07162c !important;
+}
+#cameraModal:fullscreen .modal-backdrop,
+#cameraModal:-webkit-full-screen .modal-backdrop,
+#cameraModal.camera-fullscreen-fallback .modal-backdrop { display: none !important; }
+#cameraModal:fullscreen .camera-modal-card.landscape-id-layout,
+#cameraModal:-webkit-full-screen .camera-modal-card.landscape-id-layout,
+#cameraModal.camera-fullscreen-fallback .camera-modal-card.landscape-id-layout {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 28vw) !important;
+  grid-template-rows: auto auto minmax(0, 1fr) auto !important;
+  gap: 10px 16px !important;
+  align-items: center !important;
+  width: 100% !important;
+  max-width: none !important;
+  height: 100% !important;
+  max-height: none !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: clamp(10px, 2vw, 24px) !important;
+  border-radius: 0 !important;
+  overflow: hidden !important;
+  box-shadow: none !important;
+  animation: none !important;
+  background: #07162c !important;
+  color: #14243e !important;
+}
+#cameraModal:fullscreen .camera-modal-card.landscape-id-layout .modal-close,
+#cameraModal:-webkit-full-screen .camera-modal-card.landscape-id-layout .modal-close,
+#cameraModal.camera-fullscreen-fallback .camera-modal-card.landscape-id-layout .modal-close {
+  position: fixed !important;
+  top: max(8px, env(safe-area-inset-top)) !important;
+  right: max(8px, env(safe-area-inset-right)) !important;
+  z-index: 10 !important;
+}
+#cameraModal:fullscreen .camera-modal-card.landscape-id-layout .modal-heading,
+#cameraModal:-webkit-full-screen .camera-modal-card.landscape-id-layout .modal-heading,
+#cameraModal.camera-fullscreen-fallback .camera-modal-card.landscape-id-layout .modal-heading {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  align-self: end !important;
+  margin: 0 !important;
+  padding: 0 38px 0 0 !important;
+  color: #14243e !important;
+}
+#cameraModal:fullscreen .camera-modal-card.landscape-id-layout .modal-heading h2,
+#cameraModal:-webkit-full-screen .camera-modal-card.landscape-id-layout .modal-heading h2,
+#cameraModal.camera-fullscreen-fallback .camera-modal-card.landscape-id-layout .modal-heading h2 {
+  margin: 4px 0 !important;
+  font-size: clamp(17px, 2.6vh, 27px) !important;
+  line-height: 1.2 !important;
+}
+#cameraModal:fullscreen .camera-modal-card.landscape-id-layout .modal-heading p,
+#cameraModal:-webkit-full-screen .camera-modal-card.landscape-id-layout .modal-heading p,
+#cameraModal.camera-fullscreen-fallback .camera-modal-card.landscape-id-layout .modal-heading p {
+  font-size: clamp(10px, 1.5vh, 14px) !important;
+  line-height: 1.4 !important;
+}
+#cameraModal:fullscreen .camera-modal-card.landscape-id-layout .camera-orientation-notice,
+#cameraModal:-webkit-full-screen .camera-modal-card.landscape-id-layout .camera-orientation-notice,
+#cameraModal.camera-fullscreen-fallback .camera-modal-card.landscape-id-layout .camera-orientation-notice {
+  grid-column: 2 !important;
+  grid-row: 2 !important;
+  margin: 0 !important;
+  font-size: clamp(10px, 1.5vh, 13px) !important;
+  line-height: 1.45 !important;
+}
+#cameraModal:fullscreen .camera-modal-card.landscape-id-layout .camera-frame,
+#cameraModal:-webkit-full-screen .camera-modal-card.landscape-id-layout .camera-frame,
+#cameraModal.camera-fullscreen-fallback .camera-modal-card.landscape-id-layout .camera-frame {
+  grid-column: 1 !important;
+  grid-row: 1 / 5 !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  aspect-ratio: auto !important;
+  align-self: stretch !important;
+  border-radius: 12px !important;
+  background: #020812 !important;
+}
+#cameraModal:fullscreen .camera-modal-card.landscape-id-layout .camera-frame video,
+#cameraModal:-webkit-full-screen .camera-modal-card.landscape-id-layout .camera-frame video,
+#cameraModal.camera-fullscreen-fallback .camera-modal-card.landscape-id-layout .camera-frame video {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  object-position: center center !important;
+}
+#cameraModal:fullscreen .camera-modal-card.landscape-id-layout .camera-frame-overlay,
+#cameraModal:-webkit-full-screen .camera-modal-card.landscape-id-layout .camera-frame-overlay,
+#cameraModal.camera-fullscreen-fallback .camera-modal-card.landscape-id-layout .camera-frame-overlay {
+  inset: auto !important;
+  width: min(96%, 1000px) !important;
+  height: auto !important;
+  aspect-ratio: 85.6 / 53.98 !important;
+  top: 50% !important;
+  left: 50% !important;
+  right: auto !important;
+  bottom: auto !important;
+  transform: translate(-50%, -50%) !important;
+  border: 2px solid rgba(255,255,255,.88) !important;
+  border-radius: 10px !important;
+}
+#cameraModal:fullscreen .camera-modal-card.landscape-id-layout #cameraError,
+#cameraModal:-webkit-full-screen .camera-modal-card.landscape-id-layout #cameraError,
+#cameraModal.camera-fullscreen-fallback .camera-modal-card.landscape-id-layout #cameraError {
+  grid-column: 2 !important;
+  grid-row: 3 !important;
+  align-self: start !important;
+  margin: 0 !important;
+  font-size: 12px !important;
+}
+#cameraModal:fullscreen .camera-modal-card.landscape-id-layout .camera-controls,
+#cameraModal:-webkit-full-screen .camera-modal-card.landscape-id-layout .camera-controls,
+#cameraModal.camera-fullscreen-fallback .camera-modal-card.landscape-id-layout .camera-controls {
+  grid-column: 2 !important;
+  grid-row: 4 !important;
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 8px !important;
+  width: 100% !important;
+  margin: 0 !important;
+  align-items: center !important;
+  align-self: end !important;
+}
+#cameraModal:fullscreen .camera-modal-card.landscape-id-layout .capture-live,
+#cameraModal:-webkit-full-screen .camera-modal-card.landscape-id-layout .capture-live,
+#cameraModal.camera-fullscreen-fallback .camera-modal-card.landscape-id-layout .capture-live {
+  grid-column: 1 / -1 !important;
+  width: auto !important;
+  margin: 0 0 4px !important;
+  font-size: 10px !important;
+}
+#cameraModal:fullscreen .camera-modal-card.landscape-id-layout .camera-controls .btn,
+#cameraModal:-webkit-full-screen .camera-modal-card.landscape-id-layout .camera-controls .btn,
+#cameraModal.camera-fullscreen-fallback .camera-modal-card.landscape-id-layout .camera-controls .btn {
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 48px !important;
+  padding: 8px !important;
+  font-size: 12px !important;
+  white-space: normal !important;
+}
+#cameraModal:fullscreen .camera-modal-card.landscape-id-layout #captureCanvas,
+#cameraModal:-webkit-full-screen .camera-modal-card.landscape-id-layout #captureCanvas,
+#cameraModal.camera-fullscreen-fallback .camera-modal-card.landscape-id-layout #captureCanvas { display: none !important; }
+
+/* If the browser refuses to rotate while still portrait, display a clear rotate
+   instruction rather than pretending that a portrait screen is landscape. */
+@media (max-width: 900px) and (orientation: portrait) {
+  #cameraModal.camera-fullscreen-fallback:not(:fullscreen):not(:-webkit-full-screen) .camera-modal-card.landscape-id-layout {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    gap: 12px !important;
+    overflow-y: auto !important;
+    padding: 16px !important;
+  }
+  #cameraModal.camera-fullscreen-fallback:not(:fullscreen):not(:-webkit-full-screen) .camera-frame.id-capture-mode {
+    height: min(35dvh, 300px) !important;
+    flex: 0 0 auto !important;
+  }
+  #cameraModal.camera-fullscreen-fallback:not(:fullscreen):not(:-webkit-full-screen) .modal-heading,
+  #cameraModal.camera-fullscreen-fallback:not(:fullscreen):not(:-webkit-full-screen) .camera-orientation-notice,
+  #cameraModal.camera-fullscreen-fallback:not(:fullscreen):not(:-webkit-full-screen) .camera-controls { width: 100% !important; }
+}
+@media (max-width: 900px) and (orientation: landscape) {
+  #cameraModal.camera-fullscreen-fallback .camera-modal-card.landscape-id-layout { grid-template-columns: minmax(0,1fr) minmax(190px,28vw) !important; }
+}

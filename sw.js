@@ -1,4 +1,4 @@
-const CACHE_NAME = 'findit-campus-id-demo-v9-fullscreen-landscape-lock';
+const CACHE_NAME = 'findit-campus-id-demo-v10-true-fullscreen-landscape-ui';
 const APP_FILES = [
   './', './index.html', './styles.css', './app.js', './manifest.json',
   './icons/icon-180.png', './icons/icon-192.png', './icons/icon-512.png'

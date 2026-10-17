@@ -207,40 +207,106 @@
     });
   }
   async function startCamera(type) {
-    closeCamera(); cameraType = type;
+    // Keep camera opening tied to the user's click: expose the modal, set the
+    // correct layout, and request fullscreen before awaiting camera permissions.
+    closeCamera();
+    cameraType = type;
+    const modal = $('cameraModal');
+    const card = modal.querySelector('.camera-modal-card');
+    const video = $('cameraVideo');
+
     $('cameraTitle').textContent = type === 'id' ? 'Capture your school ID' : 'Take your live selfie';
     $('cameraInstruction').textContent = type === 'id'
-      ? 'Turn your phone sideways (landscape) before capturing. Hold the ID horizontally and close enough to fill the guide, with all four corners visible. Keep it steady and avoid glare.'
+      ? 'Landscape camera mode: turn your phone sideways. Keep the complete ID inside the horizontal guide.'
       : 'Center your face inside the oval guide. Keep your eyes visible and use even lighting.';
     $('cameraOrientationNotice').classList.add('hidden');
     const frame = $('cameraFrame');
     frame.classList.toggle('id-capture-mode', type === 'id');
     frame.classList.toggle('selfie-capture-mode', type === 'selfie');
     $('cameraFrameOverlay').classList.toggle('id-capture-overlay', type === 'id');
-    $('cameraModal').querySelector('.camera-modal-card').classList.toggle('face-camera-card', type === 'selfie');
-    $('cameraVideo').style.transform = 'none';
-    $('cameraError').classList.add('hidden'); $('cameraLoading').classList.remove('hidden'); $('takePhotoBtn').disabled = true; $('cameraModal').classList.remove('hidden');
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      $('cameraLoading').classList.add('hidden'); $('cameraError').textContent = 'This browser cannot access a camera here. Open the project through VS Code Live Server (http://localhost) or a secure HTTPS page.'; $('cameraError').classList.remove('hidden'); return;
-    }
-    try {
-      // Best-effort landscape lock. Mobile browsers may reject this unless the page is installed/fullscreen;
-      // if so, the notice asks the student to rotate the phone manually.
-      if (type === 'id' && screen.orientation && typeof screen.orientation.lock === 'function') {
-        try { await screen.orientation.lock('landscape'); } catch (_) { /* manual rotation fallback below */ }
+    card.classList.toggle('face-camera-card', type === 'selfie');
+    card.classList.toggle('landscape-id-layout', type === 'id');
+    modal.classList.toggle('camera-fullscreen-fallback', type === 'id');
+    video.style.transform = 'none';
+    $('cameraError').classList.add('hidden');
+    $('cameraLoading').classList.remove('hidden');
+    $('takePhotoBtn').disabled = true;
+    modal.classList.remove('hidden');
+
+    // A genuine fullscreen request is required for the browser to allow
+    // orientation locking on supported mobile browsers. If it is rejected,
+    // the CSS fallback still fills the available web viewport.
+    let fullscreenPromise = null;
+    if (type === 'id') {
+      const requestFullscreen = modal.requestFullscreen || modal.webkitRequestFullscreen;
+      if (typeof requestFullscreen === 'function') {
+        try {
+          fullscreenPromise = Promise.resolve(requestFullscreen.call(modal, { navigationUI: 'hide' }))
+            .then(() => true)
+            .catch((err) => { console.info('Fullscreen is not supported in this browser context.', err); return false; });
+        } catch (err) {
+          console.info('Fullscreen request was not accepted.', err);
+          fullscreenPromise = Promise.resolve(false);
+        }
       }
-      const constraints = getCameraConstraints(type);
-      cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
-      const video = $('cameraVideo'); video.srcObject = cameraStream; await video.play();
+    }
+
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      $('cameraLoading').classList.add('hidden');
+      $('cameraError').textContent = 'This browser cannot access a camera here. Open FindIT Campus directly in Chrome or Safari using its HTTPS link.';
+      $('cameraError').classList.remove('hidden');
+      return;
+    }
+
+    try {
+      if (type === 'id') {
+        if (fullscreenPromise) await fullscreenPromise;
+        // Try to lock orientation after fullscreen is entered. Many in-app
+        // browsers (including Messenger) reject this; users should open Chrome.
+        if (screen.orientation && typeof screen.orientation.lock === 'function') {
+          try { await screen.orientation.lock('landscape'); } catch (_) { /* manual landscape fallback below */ }
+        }
+      }
+      cameraStream = await navigator.mediaDevices.getUserMedia(getCameraConstraints(type));
+      video.srcObject = cameraStream;
+      await video.play();
       await waitForVideoDimensions(video);
       $('cameraLoading').classList.add('hidden');
-      if (type === 'id') syncIdLandscapeGuard(); else $('takePhotoBtn').disabled = !video.videoWidth;
+      if (type === 'id') syncIdLandscapeGuard();
+      else $('takePhotoBtn').disabled = !video.videoWidth;
     } catch (err) {
-      $('cameraLoading').classList.add('hidden'); $('cameraError').textContent = err.name === 'NotAllowedError' ? 'Camera permission was blocked. Allow camera access in the browser address bar, then try again.' : 'Camera could not open. Close other apps using the camera and try again.'; $('cameraError').classList.remove('hidden');
+      $('cameraLoading').classList.add('hidden');
+      $('cameraError').textContent = err.name === 'NotAllowedError'
+        ? 'Camera permission was blocked. Allow camera access in the browser settings, then try again.'
+        : 'Camera could not open. If this page is inside Messenger, open it in Chrome and try again.';
+      $('cameraError').classList.remove('hidden');
     }
   }
-  function stopCamera() { if (cameraStream) cameraStream.getTracks().forEach(track => track.stop()); cameraStream = null; $('cameraVideo').srcObject = null; }
-  function closeCamera() { stopCamera(); $('cameraModal').classList.add('hidden'); cameraType = null; $('cameraVideo').style.transform = 'none'; }
+  function stopCamera() {
+    if (cameraStream) cameraStream.getTracks().forEach(track => track.stop());
+    cameraStream = null;
+    $('cameraVideo').srcObject = null;
+  }
+  function closeCamera() {
+    const modal = $('cameraModal');
+    stopCamera();
+    modal.classList.add('hidden');
+    modal.classList.remove('camera-fullscreen-fallback');
+    const card = modal.querySelector('.camera-modal-card');
+    card.classList.remove('landscape-id-layout');
+    card.classList.remove('face-camera-card');
+    cameraType = null;
+    $('cameraVideo').style.transform = 'none';
+    // Exit fullscreen and restore normal orientation after capturing or canceling.
+    if (document.fullscreenElement === modal && document.exitFullscreen) {
+      document.exitFullscreen().catch(() => {});
+    } else if (document.webkitFullscreenElement === modal && document.webkitExitFullscreen) {
+      try { document.webkitExitFullscreen(); } catch (_) {}
+    }
+    if (screen.orientation && typeof screen.orientation.unlock === 'function') {
+      try { screen.orientation.unlock(); } catch (_) {}
+    }
+  }
   document.querySelectorAll('[data-camera]').forEach(button => button.addEventListener('click', () => startCamera(button.dataset.camera)));
   document.querySelectorAll('[data-close-camera]').forEach(button => button.addEventListener('click', closeCamera));
   $('retakeIdBtn').addEventListener('click', () => startCamera('id'));

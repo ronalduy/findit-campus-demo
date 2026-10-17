@@ -63,3 +63,11 @@ LATEST UPDATE — FULL-SCREEN LANDSCAPE ID CAMERA (v9)
 - Capture remains disabled while the mobile viewport or camera feed is portrait. If rotation is blocked, enable Auto-rotate and open the HTTPS site in Chrome rather than Messenger's in-app browser.
 - Some browsers (especially in-app browsers and iOS browsers) do not allow a website to force orientation. In those browsers, the user must rotate the phone manually; the site cannot override that restriction.
 - Closing the camera exits fullscreen and unlocks orientation where supported. The service-worker cache name was updated to help fetch the new build.
+
+LATEST UPDATE — EDGE-TO-EDGE LANDSCAPE CAMERA (v10)
+- Fixed the ID-camera flow so it actually applies the landscape layout class and requests fullscreen when the user taps Open camera. Previous CSS referenced fullscreen layouts that were never activated by the JavaScript.
+- The ID camera now tries fullscreen first, then requests a landscape orientation lock. In landscape, the camera preview fills most of the screen and capture/cancel controls sit in a side panel, instead of showing a small centered white card.
+- If fullscreen is refused, a fallback fills the available webpage viewport. The Messenger in-app browser can still keep its own header visible and may refuse screen rotation; open the website directly in Chrome on Android for the best result.
+- The PWA manifest now requests landscape orientation when installed as an app, where the operating system/browser supports it.
+- After uploading, replace index.html, styles.css, app.js, manifest.json and sw.js in the repository root. Keep the existing icons folder. Commit changes, wait for Pages to deploy, close old tabs, then reopen the site.
+- This is still a browser demo. A landscape guide is not face recognition or liveness detection, and OCR results must be checked manually.
