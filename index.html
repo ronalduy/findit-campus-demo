@@ -9,6 +9,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-180.png">
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
 <body>
@@ -61,7 +63,7 @@
       <div class="privacy-banner"><span class="privacy-icon">ⓘ</span><div><strong>Before you continue</strong><p>This demo stores your application and captured images in this browser only. Use a private device and ask your school before submitting real ID information. OCR can make mistakes, so check every field.</p></div></div>
       <form id="registerForm">
         <div class="register-grid">
-          <section class="panel photo-panel"><div class="panel-title-row"><div><span class="step-number">01</span><h3>Capture your school ID</h3><p>Use the back camera on a phone where possible.</p></div><span class="required-tag">Required</span></div>
+          <section class="panel photo-panel"><div class="panel-title-row"><div><span class="step-number">01</span><h3>Capture your school ID</h3><p>Use the back camera and hold the whole ID horizontally inside the guide.</p></div><span class="required-tag">Required</span></div>
             <div class="capture-stage" id="idPhotoStage"><div class="capture-placeholder"><div class="capture-illustration id-illustration"><span>▤</span><i>✦</i></div><strong>No ID photo yet</strong><small>Place the whole ID inside the frame.</small></div></div>
             <div class="capture-actions"><button class="btn btn-primary" type="button" data-camera="id">▣ &nbsp; Open camera</button><button class="btn btn-secondary" type="button" id="retakeIdBtn" disabled>↻ &nbsp; Retake ID</button></div>
             <div class="capture-caption"><span class="live-dot"></span> Live camera capture only · No gallery upload</div>
@@ -112,10 +114,11 @@
 
   <footer class="site-footer"><span>© 2026 FindIT Campus</span><span>Designed for our school community <b>✦</b></span><span class="footer-demo">STUDENT PROJECT DEMO</span></footer>
 
-  <div id="cameraModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="cameraTitle"><div class="modal-backdrop" data-close-camera></div><div class="modal-card camera-modal-card"><button class="modal-close" type="button" data-close-camera aria-label="Close camera">×</button><div class="modal-heading"><span class="eyebrow">LIVE CAPTURE</span><h2 id="cameraTitle">Capture photo</h2><p id="cameraInstruction">Position the item clearly inside the frame.</p></div><div id="cameraFrame" class="camera-frame"><video id="cameraVideo" autoplay playsinline muted></video><div id="cameraFrameOverlay" class="camera-frame-overlay"><span></span><i></i></div><div id="cameraLoading" class="camera-loading hidden"><span class="spinner"></span><p>Opening camera...</p></div></div><div id="cameraZoomControls" class="camera-zoom-controls hidden"><label for="cameraZoom"><span>School ID zoom</span><strong id="cameraZoomValue">1.2×</strong></label><input id="cameraZoom" type="range" min="1" max="2.2" step="0.1" value="1.2"><p id="cameraZoomHint">Adjust until the ID fills the horizontal guide. Keep all four corners visible.</p></div><div id="cameraError" class="alert alert-error hidden"></div><div class="camera-controls"><span class="capture-live"><i></i> CAMERA LIVE</span><button class="btn btn-primary" id="takePhotoBtn" type="button">● &nbsp; Capture photo</button><button class="btn btn-secondary" type="button" data-close-camera>Cancel</button></div><canvas id="captureCanvas" class="hidden"></canvas></div></div>
+  <div id="cameraModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="cameraTitle"><div class="modal-backdrop" data-close-camera></div><div class="modal-card camera-modal-card"><button class="modal-close" type="button" data-close-camera aria-label="Close camera">×</button><div class="modal-heading"><span class="eyebrow">LIVE CAPTURE</span><h2 id="cameraTitle">Capture photo</h2><p id="cameraInstruction">Position the item clearly inside the frame.</p></div><div id="cameraFrame" class="camera-frame"><video id="cameraVideo" autoplay playsinline muted></video><div id="cameraFrameOverlay" class="camera-frame-overlay"><span></span><i></i></div><div id="cameraLoading" class="camera-loading hidden"><span class="spinner"></span><p>Opening camera...</p></div></div><div id="cameraError" class="alert alert-error hidden"></div><div class="camera-controls"><span class="capture-live"><i></i> CAMERA LIVE</span><button class="btn btn-primary" id="takePhotoBtn" type="button">● &nbsp; Capture photo</button><button class="btn btn-secondary" type="button" data-close-camera>Cancel</button></div><canvas id="captureCanvas" class="hidden"></canvas></div></div>
 
   <div id="applicationModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="applicationModalTitle"><div class="modal-backdrop" data-close-application></div><div class="modal-card application-modal-card"><button class="modal-close" type="button" data-close-application aria-label="Close details">×</button><div id="applicationModalBody"></div></div></div>
   <div id="toastHost" class="toast-host" aria-live="polite"></div>
+  <script>if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) { window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {})); }</script>
   <script src="app.js"></script>
 </body>
 </html>

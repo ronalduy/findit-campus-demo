@@ -1,47 +1,40 @@
-FINDIT CAMPUS — SCHOOL ID VERIFICATION DEMO
-===========================================
+FINDIT CAMPUS — SCHOOL ID VERIFICATION DEMO (CAPTURE FIX)
+========================================================
 
-WHAT THIS DEMO DOES
-- Student registration with LIVE camera capture for school ID and selfie only.
-- No gallery/file upload is provided for the student ID or selfie fields.
-- The school ID camera uses a horizontal landscape guide matching the usual bank-card shape, with adjustable on-screen zoom. Capture is cropped to the guide before OCR.
-- OCR tries to read a student number, name, and program from the captured ID.
-- OCR fields remain editable because text recognition can be wrong.
-- Student submits an application in Pending status.
-- Admin/Teacher reviews the captured ID photo, live selfie, and form details.
-- Admin can approve, reject, or request correction.
-- An approved student can then sign in with the registered email and password.
-- Student dashboard contains only Lost Items and Found Items navigation.
-- Admin can post lost/found reports, add an optional item photo, mark found items as returned after in-person handover, and export item reports to CSV.
-- Example items are included for demonstration.
+WHAT CHANGED IN THIS VERSION
+- Removed the digital zoom slider.
+- Uses a fixed landscape camera frame matching a standard school ID card ratio.
+- The saved preview and OCR use the same center-cropped image. It no longer maps a CSS zoomed overlay to camera pixels, which could crop the table instead of the ID on some mobile browsers.
+- Reuses the OCR worker while the page stays open and tries enhanced/threshold images only when fields remain unclear.
+- Limits unnecessary OCR upscaling to reduce processing time on phones.
+- Adds a new service-worker cache version so the revised app assets can replace stale cached files.
 
-HOW TO RUN
-1. Extract the ZIP folder.
+HOW TO TEST LOCALLY
+1. Extract the ZIP.
 2. Open the folder in Visual Studio Code.
-3. If needed, install the VS Code extension named "Live Server".
-4. Right-click index.html and choose "Open with Live Server".
-5. Allow camera access when the browser asks. Camera access normally requires localhost or HTTPS; opening the file as file:// may block the camera.
-6. Choose Admin / Teacher at login. Demo username: admin. Demo password: 1234.
-7. In another session/tab in the same browser, register a student using camera capture, then sign in as admin and approve the application. After approval, the student can sign in.
-8. For ID text reading (OCR), the browser needs internet access to load Tesseract.js. Move the card close enough to fill the horizontal guide, adjust the zoom slider, keep all four card corners visible, and avoid glare. The captured image is cropped to the guide before OCR. If OCR is unavailable or inaccurate, enter/correct the fields manually.
+3. Run index.html using Live Server, or use HTTPS hosting (such as GitHub Pages).
+4. Use the rear camera, hold the ID horizontally, center it in the landscape guide, and keep all four corners visible.
+5. After capture, check that the saved preview shows the ID itself, not the table/background. Retake if needed.
+6. The OCR should auto-fill Student ID Number, Complete Name, and Program/Course when the text can be read. Review every field before submitting.
 
-IMPORTANT LIMITS — DEMO ONLY
-- This is a front-end HTML/CSS/JavaScript prototype. It does NOT connect to PHP, MySQL, or XAMPP yet.
-- Data and captured photos are saved in this browser's localStorage. They do not synchronize across devices, users, or different browsers.
-- ID photos and selfies are sensitive personal information. For a class demo, use a test/mock ID where possible. Avoid using real student ID photos on a shared/public computer. If you do test with real details, understand that the data stays in this browser until reset or cleared.
-- The demo admin credential admin / 1234 is intentionally simple and is NOT secure for a real system.
-- This prototype computes a client-side password digest where available, but browser storage is not a secure account database.
-- Camera capture means the image is taken from the camera; it does NOT prove liveness or verify that the selfie matches the person on the ID.
-- OCR is best-effort text reading, not official verification. Admin/Teacher must compare the information with the school's official records before approval.
-- For the real system, use PHP + MySQL through XAMPP, server-side password_hash/password_verify, prepared statements, authorization checks on every protected route, CSRF protection, upload validation, private image storage, a privacy notice, a retention/deletion policy, and school approval before collecting student ID/selfie data.
+UPDATE AN EXISTING GITHUB PAGES DEMO
+1. Open the repository root (the same folder containing the published index.html).
+2. Use Add file > Upload files and upload the files from this ZIP directly to the repository root, replacing existing files when asked.
+3. Include index.html, styles.css, app.js, manifest.json, and sw.js. Upload the icons folder too if the repository does not already contain it.
+4. Commit changes and wait for GitHub Pages to publish.
+5. On the phone, open the site in Chrome/Safari itself rather than inside Messenger's in-app browser where possible. Refresh the page. If it still shows old UI, close the tab and reopen; clear that site's cached data/service worker if necessary.
 
-FILES
-- index.html  Main screens and form markup.
-- styles.css  Responsive visual design.
-- app.js      Demo workflow, browser camera capture, OCR, local storage, admin review, and student item pages.
+DEMO LIMITATIONS
+- OCR cannot guarantee 100% accuracy. Use a clear, straight, glare-free photo and manually check all fields.
+- Live camera capture and OCR do not prove identity. Admin/Teacher must check against official school records.
+- This demo uses browser localStorage and a demo admin login; it is not a secure production account system and does not synchronize across devices.
+- Use sample/fake ID data for public hosting. Do not upload real school ID photos or student personal data to a public repository.
+- GitHub Pages hosts static HTML/CSS/JavaScript only; the eventual shared school system still needs a PHP/MySQL backend hosted on a server such as XAMPP for local testing.
 
-SAMPLE ADMIN LOGIN
-Username: admin
-Password: 1234
 
-Use the same browser for registration and admin approval because the demo uses localStorage on this browser only.
+LATEST UPDATE — SELFIE FACE GUIDE
+- The selfie camera uses a tall portrait preview with a centered oval/egg-shaped face guide and eye-level alignment line.
+- The school ID camera remains a separate landscape card guide.
+- To update an existing GitHub Pages repository, replace index.html, styles.css, app.js, and sw.js in the repository root. Keep manifest.json, pwa-install.js, and icons if they are already present.
+- If a phone still shows the old design, close the site tab, reopen the URL, and refresh. If the old layout persists, clear the site's cached data or use a new private tab to test.
+- This oval is a visual positioning guide only. It does not perform automatic face recognition, face-to-ID matching, or liveness detection. Admin/Teacher must manually verify the application.

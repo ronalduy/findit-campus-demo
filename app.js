@@ -11,11 +11,12 @@
   let studentItemTab = 'lost';
   let cameraStream = null;
   let cameraType = null;
-  let cameraZoom = 1.2;
   let photoIdData = null;
   let photoSelfieData = null;
   let lastOcrAutofill = { studentNumber: '', fullName: '', program: '' };
   let ocrSequence = 0;
+  let ocrWorkerPromise = null;
+  let activeOcrLogger = null;
   let itemPhotoDraft = null;
   let activeApplicationId = null;
   let items = loadList(keys.items, null);
@@ -165,17 +166,14 @@
     closeCamera(); cameraType = type;
     $('cameraTitle').textContent = type === 'id' ? 'Capture your school ID' : 'Take your live selfie';
     $('cameraInstruction').textContent = type === 'id'
-      ? 'Use the back camera. Turn the ID horizontally and bring it closer until it fills the landscape guide. Keep all four corners visible and avoid glare.'
-      : 'Look toward the camera and keep your face centered.';
+      ? 'Use the back camera. Hold the ID horizontally, centered inside the guide, with all four corners visible. Keep the phone steady and avoid glare.'
+      : 'Center your face inside the oval guide. Keep your eyes visible and use even lighting.';
     const frame = $('cameraFrame');
     frame.classList.toggle('id-capture-mode', type === 'id');
     frame.classList.toggle('selfie-capture-mode', type === 'selfie');
     $('cameraFrameOverlay').classList.toggle('id-capture-overlay', type === 'id');
-    $('cameraZoomControls').classList.toggle('hidden', type !== 'id');
-    cameraZoom = type === 'id' ? 1.2 : 1;
-    $('cameraZoom').value = String(cameraZoom);
-    $('cameraZoomValue').textContent = `${cameraZoom.toFixed(1)}×`;
-    $('cameraVideo').style.transform = `scale(${cameraZoom})`;
+    $('cameraModal').querySelector('.camera-modal-card').classList.toggle('face-camera-card', type === 'selfie');
+    $('cameraVideo').style.transform = 'none';
     $('cameraError').classList.add('hidden'); $('cameraLoading').classList.remove('hidden'); $('takePhotoBtn').disabled = true; $('cameraModal').classList.remove('hidden');
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       $('cameraLoading').classList.add('hidden'); $('cameraError').textContent = 'This browser cannot access a camera here. Open the project through VS Code Live Server (http://localhost) or a secure HTTPS page.'; $('cameraError').classList.remove('hidden'); return;
@@ -190,13 +188,8 @@
       $('cameraLoading').classList.add('hidden'); $('cameraError').textContent = err.name === 'NotAllowedError' ? 'Camera permission was blocked. Allow camera access in the browser address bar, then try again.' : 'Camera could not open. Close other apps using the camera and try again.'; $('cameraError').classList.remove('hidden');
     }
   }
-  $('cameraZoom').addEventListener('input', () => {
-    cameraZoom = Math.max(1, Number($('cameraZoom').value) || 1);
-    $('cameraZoomValue').textContent = `${cameraZoom.toFixed(1)}×`;
-    if (cameraType === 'id') $('cameraVideo').style.transform = `scale(${cameraZoom})`;
-  });
   function stopCamera() { if (cameraStream) cameraStream.getTracks().forEach(track => track.stop()); cameraStream = null; $('cameraVideo').srcObject = null; }
-  function closeCamera() { stopCamera(); $('cameraModal').classList.add('hidden'); cameraType = null; $('cameraVideo').style.transform = 'scale(1)'; }
+  function closeCamera() { stopCamera(); $('cameraModal').classList.add('hidden'); cameraType = null; $('cameraVideo').style.transform = 'none'; }
   document.querySelectorAll('[data-camera]').forEach(button => button.addEventListener('click', () => startCamera(button.dataset.camera)));
   document.querySelectorAll('[data-close-camera]').forEach(button => button.addEventListener('click', closeCamera));
   $('retakeIdBtn').addEventListener('click', () => startCamera('id'));
@@ -208,35 +201,42 @@
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
     let ocrSource = null;
     if (type === 'id') {
-      // Crop exactly what is inside the horizontal ID guide. The same crop is used for OCR,
-      // so the text reader sees the card rather than fingers, desk, or background.
+      // IMPORTANT: The preview uses object-fit:cover inside a landscape (ID-card-shaped)
+      // frame. Crop the *source video* to the same center aspect ratio instead of trying
+      // to map CSS-transformed overlay coordinates back to camera pixels. That old mapping
+      // could capture the desk rather than the card on some phone/in-app browsers.
+      const vw = video.videoWidth;
+      const vh = video.videoHeight;
       const frameRect = $('cameraFrame').getBoundingClientRect();
-      const guideRect = $('cameraFrameOverlay').getBoundingClientRect();
-      const fw = frameRect.width, fh = frameRect.height;
-      const vw = video.videoWidth, vh = video.videoHeight;
-      const coverScale = Math.max(fw / vw, fh / vh);
-      const totalScale = coverScale * Math.max(1, cameraZoom || 1);
-      const displayLeft = (fw - vw * totalScale) / 2;
-      const displayTop = (fh - vh * totalScale) / 2;
-      let sx = (guideRect.left - frameRect.left - displayLeft) / totalScale;
-      let sy = (guideRect.top - frameRect.top - displayTop) / totalScale;
-      let sw = guideRect.width / totalScale;
-      let sh = guideRect.height / totalScale;
-      sx = Math.max(0, Math.min(vw - 1, sx)); sy = Math.max(0, Math.min(vh - 1, sy));
-      sw = Math.max(1, Math.min(vw - sx, sw)); sh = Math.max(1, Math.min(vh - sy, sh));
-      // Standard ID-1 cards are landscape (85.60 x 53.98 mm, approximately 1.586:1).
-      // Export a high-resolution landscape crop so OCR can read the small printed fields.
-      canvas.width = 2400; canvas.height = Math.round(canvas.width / (85.6 / 53.98));
+      const targetAspect = frameRect.width / Math.max(1, frameRect.height) || (85.6 / 53.98);
+      let sx = 0, sy = 0, sw = vw, sh = vh;
+      if ((vw / vh) > targetAspect) {
+        sw = vh * targetAspect;
+        sx = (vw - sw) / 2;
+      } else {
+        sh = vw / targetAspect;
+        sy = (vh - sh) / 2;
+      }
+      // The guide is a little inside the frame. Keep a 2% margin around the capture.
+      const cx = sx + sw / 2, cy = sy + sh / 2;
+      sw *= 0.96; sh *= 0.96;
+      sx = cx - sw / 2; sy = cy - sh / 2;
+      const outputWidth = 2200;
+      canvas.width = outputWidth;
+      canvas.height = Math.round(outputWidth / targetAspect);
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
       ctx.drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
-      ocrSource = canvas.toDataURL('image/png');
+      // Use the exact same crop for the saved preview and OCR input.
+      ocrSource = canvas.toDataURL('image/jpeg', 0.94);
     } else {
       const max = 1000;
       const scale = Math.min(1, max / Math.max(video.videoWidth, video.videoHeight));
       canvas.width = Math.round(video.videoWidth * scale); canvas.height = Math.round(video.videoHeight * scale);
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     }
-    let dataUrl = canvas.toDataURL('image/jpeg', type === 'id' ? .94 : .70);
-    try { dataUrl = await compressDataUrl(dataUrl, type === 'id' ? 1800 : 1000, type === 'id' ? .86 : .64); } catch (_) {}
+    let dataUrl = canvas.toDataURL('image/jpeg', type === 'id' ? .92 : .70);
+    try { dataUrl = await compressDataUrl(dataUrl, type === 'id' ? 1800 : 1000, type === 'id' ? .90 : .64); } catch (_) {}
     closeCamera(); setPhotoStage(type, dataUrl);
     if (type === 'id') {
       showToast('School ID captured from the landscape guide. Reading the cropped ID automatically…', 'success');
@@ -268,23 +268,28 @@
         else if (msg.status === 'loading language traineddata') status.textContent = 'Loading the text reader…';
         else if (msg.status === 'loading tesseract core') status.textContent = 'Starting the text reader…';
       };
-      worker = await Tesseract.createWorker('eng', 1, { logger: updateProgress });
+      worker = await getOcrWorker(updateProgress);
+      // Start with the original crop. Try enhanced contrast next only if some fields are
+      // still missing, and use thresholding as a last fallback. The worker is reused across
+      // captures so repeat scans do not reload the OCR engine each time.
       const variants = [
-        { label: 'original color', mode: 'color' },
-        { label: 'clearer contrast', mode: 'contrast' },
+        { label: 'clear ID image', mode: 'color' },
+        { label: 'higher contrast', mode: 'contrast' },
         { label: 'black-and-white text', mode: 'threshold' }
       ];
       const results = [];
+      let parsed = { studentNumber: '', fullName: '', program: '' };
       for (let i = 0; i < variants.length; i++) {
         if (myRun !== ocrSequence) return;
-        status.textContent = `Checking ID text (${i + 1} of ${variants.length})…`;
+        status.textContent = i === 0 ? 'Reading school ID…' : `Improving text reading (${i + 1} of 3)…`;
         const prepared = await prepareIdForOcr(imageData, variants[i].mode);
         const result = await worker.recognize(prepared);
         const text = (result && result.data && result.data.text) || '';
         results.push(parseIdText(text));
+        parsed = selectConsensusFields(results);
+        if (countParsedFields(parsed) === 3) break;
       }
       if (myRun !== ocrSequence) return;
-      const parsed = selectConsensusFields(results);
       applyOcrValues(parsed);
       const count = countParsedFields(parsed);
       if (count === 3) {
@@ -308,11 +313,30 @@
       status.textContent = `${err.message || 'Automatic ID reading failed.'} Please retake the photo or enter the three details manually.`;
       status.style.background = '#fff2f3'; status.style.color = '#c64e5b';
     } finally {
-      if (worker) {
-        try { await worker.terminate(); } catch (_) {}
-      }
+      activeOcrLogger = null;
     }
   }
+
+  async function getOcrWorker(logger) {
+    activeOcrLogger = logger;
+    if (!ocrWorkerPromise) {
+      ocrWorkerPromise = Tesseract.createWorker('eng', 1, {
+        logger: message => {
+          if (typeof activeOcrLogger === 'function') activeOcrLogger(message);
+        }
+      }).catch(error => {
+        ocrWorkerPromise = null;
+        throw error;
+      });
+    }
+    const worker = await ocrWorkerPromise;
+    activeOcrLogger = logger;
+    return worker;
+  }
+
+  window.addEventListener('pagehide', () => {
+    if (ocrWorkerPromise) ocrWorkerPromise.then(worker => worker.terminate()).catch(() => {});
+  });
 
   function clearPreviousOcrSuggestions() {
     const fields = { studentNumber: 'studentNumber', fullName: 'fullName', program: 'program' };
@@ -332,7 +356,9 @@
       image.onload = () => {
         try {
           const canvas = document.createElement('canvas');
-          const scale = Math.min(2.5, Math.max(1.5, 2200 / Math.max(image.naturalWidth, image.naturalHeight)));
+          // Keep OCR images near 2,200 px on the long edge. Large upscales slow phones
+          // down without restoring detail that the camera did not capture.
+          const scale = Math.min(1.35, Math.max(1, 2200 / Math.max(image.naturalWidth, image.naturalHeight)));
           canvas.width = Math.round(image.naturalWidth * scale);
           canvas.height = Math.round(image.naturalHeight * scale);
           const ctx = canvas.getContext('2d', { willReadFrequently: true });
@@ -481,7 +507,7 @@
     // Student ID: prefer a number on a line labeled Student ID / ID No. Do not confuse dates or phone numbers.
     let studentNumber = '';
     const idLabel = /(?:student\s*(?:id\s*(?:no\.?|number|#)?|no\.?|number|#)|id\s*(?:no\.?|number|#))/i;
-    const idPattern = /\b(?:[A-Z]{1,4}[- ]?\d{4,12}|20\d{2}[- ]?\d{4,8}|\d{7,12})\b/i;
+    const idPattern = /\b(?:[A-Z]{1,4}[- ]?\d{3,12}|20\d{2}[- ]?\d{2,8}|\d{6,12})\b/i;
     const broadLabeledPattern = /\b[A-Z0-9-]{5,20}\b/i;
     for (let i = 0; i < lines.length; i++) {
       if (!idLabel.test(lines[i])) continue;
