@@ -194,123 +194,180 @@
   document.querySelectorAll('[data-close-camera]').forEach(button => button.addEventListener('click', closeCamera));
   $('retakeIdBtn').addEventListener('click', () => startCamera('id'));
   $('retakeSelfieBtn').addEventListener('click', () => startCamera('selfie'));
+  // Capture the complete camera frame for the saved school-ID photo so a browser-specific
+  // video crop can never cut the card off. Separately, calculate a crop matching the visible
+  // guide for OCR; the full frame is also sent to OCR as a fallback.
+  function captureVisibleGuideCrop(video) {
+    const vw = video.videoWidth;
+    const vh = video.videoHeight;
+    const videoRect = video.getBoundingClientRect();
+    const guideRect = $('cameraFrameOverlay').getBoundingClientRect();
+    if (!vw || !vh || !videoRect.width || !videoRect.height || !guideRect.width || !guideRect.height) return null;
+
+    // Reproduce CSS object-fit: cover. This maps the guide's displayed position back to
+    // the exact source-pixel region visible through the video element.
+    const scale = Math.max(videoRect.width / vw, videoRect.height / vh);
+    const renderedWidth = vw * scale;
+    const renderedHeight = vh * scale;
+    const renderedLeft = videoRect.left + (videoRect.width - renderedWidth) / 2;
+    const renderedTop = videoRect.top + (videoRect.height - renderedHeight) / 2;
+    let sx = (guideRect.left - renderedLeft) / scale;
+    let sy = (guideRect.top - renderedTop) / scale;
+    let ex = (guideRect.right - renderedLeft) / scale;
+    let ey = (guideRect.bottom - renderedTop) / scale;
+
+    sx = Math.max(0, Math.min(vw, sx));
+    sy = Math.max(0, Math.min(vh, sy));
+    ex = Math.max(0, Math.min(vw, ex));
+    ey = Math.max(0, Math.min(vh, ey));
+    const sw = ex - sx;
+    const sh = ey - sy;
+    // Reject implausible crops; the uncropped photo will still be saved and OCRed.
+    if (sw < vw * 0.22 || sh < vh * 0.22 || sw <= 0 || sh <= 0) return null;
+
+    const cropCanvas = document.createElement('canvas');
+    const outputWidth = 2200;
+    cropCanvas.width = outputWidth;
+    cropCanvas.height = Math.max(1, Math.round(outputWidth * sh / sw));
+    const cropCtx = cropCanvas.getContext('2d');
+    cropCtx.imageSmoothingEnabled = true;
+    cropCtx.imageSmoothingQuality = 'high';
+    cropCtx.drawImage(video, sx, sy, sw, sh, 0, 0, cropCanvas.width, cropCanvas.height);
+    return cropCanvas.toDataURL('image/jpeg', 0.96);
+  }
+
   $('takePhotoBtn').addEventListener('click', async () => {
     const video = $('cameraVideo'); if (!video.videoWidth || !cameraType) return;
     const type = cameraType;
     const canvas = $('captureCanvas');
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
-    let ocrSource = null;
+    let ocrSources = [];
+
     if (type === 'id') {
-      // IMPORTANT: The preview uses object-fit:cover inside a landscape (ID-card-shaped)
-      // frame. Crop the *source video* to the same center aspect ratio instead of trying
-      // to map CSS-transformed overlay coordinates back to camera pixels. That old mapping
-      // could capture the desk rather than the card on some phone/in-app browsers.
       const vw = video.videoWidth;
       const vh = video.videoHeight;
-      const frameRect = $('cameraFrame').getBoundingClientRect();
-      const targetAspect = frameRect.width / Math.max(1, frameRect.height) || (85.6 / 53.98);
-      let sx = 0, sy = 0, sw = vw, sh = vh;
-      if ((vw / vh) > targetAspect) {
-        sw = vh * targetAspect;
-        sx = (vw - sw) / 2;
-      } else {
-        sh = vw / targetAspect;
-        sy = (vh - sh) / 2;
-      }
-      // The guide is a little inside the frame. Keep a 2% margin around the capture.
-      const cx = sx + sw / 2, cy = sy + sh / 2;
-      sw *= 0.96; sh *= 0.96;
-      sx = cx - sw / 2; sy = cy - sh / 2;
-      const outputWidth = 2200;
-      canvas.width = outputWidth;
-      canvas.height = Math.round(outputWidth / targetAspect);
+      // Keep the full source frame for the saved review photo. Do not crop the photo based
+      // on assumptions about a phone browser's video orientation or display aspect ratio.
+      const maxDimension = 2400;
+      const scale = Math.min(1, maxDimension / Math.max(vw, vh));
+      canvas.width = Math.max(1, Math.round(vw * scale));
+      canvas.height = Math.max(1, Math.round(vh * scale));
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = 'high';
-      ctx.drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
-      // Use the exact same crop for the saved preview and OCR input.
-      ocrSource = canvas.toDataURL('image/jpeg', 0.94);
-    } else {
-      const max = 1000;
-      const scale = Math.min(1, max / Math.max(video.videoWidth, video.videoHeight));
-      canvas.width = Math.round(video.videoWidth * scale); canvas.height = Math.round(video.videoHeight * scale);
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const fullFrameData = canvas.toDataURL('image/jpeg', 0.94);
+
+      // Use an exact guide-aligned crop for OCR first, then the uncropped full frame as a
+      // fallback. If a browser reports unusual camera dimensions, the full frame is safe.
+      try {
+        const guideCropData = captureVisibleGuideCrop(video);
+        if (guideCropData) ocrSources.push(guideCropData);
+      } catch (err) {
+        console.warn('Guide crop was unavailable; OCR will use the full photo.', err);
+      }
+      ocrSources.push(fullFrameData);
+      // The stored/admin-review image is intentionally the complete frame: it must not lose
+      // the school ID due to crop-coordinate differences between browsers.
+      let dataUrl = fullFrameData;
+      try { dataUrl = await compressDataUrl(fullFrameData, 1800, 0.88); } catch (_) {}
+      closeCamera();
+      setPhotoStage(type, dataUrl);
+      showToast('Full camera photo saved. Reading the guide area and checking the full photo for ID text…', 'success');
+      runIdOcr(ocrSources);
+      return;
     }
-    let dataUrl = canvas.toDataURL('image/jpeg', type === 'id' ? .92 : .70);
-    try { dataUrl = await compressDataUrl(dataUrl, type === 'id' ? 1800 : 1000, type === 'id' ? .90 : .64); } catch (_) {}
-    closeCamera(); setPhotoStage(type, dataUrl);
-    if (type === 'id') {
-      showToast('School ID captured from the landscape guide. Reading the cropped ID automatically…', 'success');
-      runIdOcr(ocrSource || dataUrl);
-    } else {
-      showToast('Live selfie captured. It will be shown to the Admin/Teacher for manual review.');
-    }
+
+    // Selfies are saved from the full frame; the oval is only a visual positioning guide.
+    const max = 1000;
+    const selfieScale = Math.min(1, max / Math.max(video.videoWidth, video.videoHeight));
+    canvas.width = Math.max(1, Math.round(video.videoWidth * selfieScale));
+    canvas.height = Math.max(1, Math.round(video.videoHeight * selfieScale));
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    let selfieData = canvas.toDataURL('image/jpeg', 0.70);
+    try { selfieData = await compressDataUrl(selfieData, 1000, 0.64); } catch (_) {}
+    closeCamera();
+    setPhotoStage(type, selfieData);
+    showToast('Live selfie captured. It will be shown to the Admin/Teacher for manual review.');
   });
   document.querySelectorAll('[data-close-application]').forEach(button => button.addEventListener('click', closeApplicationModal));
   document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeCamera(); closeApplicationModal(); } });
 
   // OCR runs automatically immediately after the school ID photo is captured.
   // Several image variants are compared. Uncertain text is left blank instead of guessed.
-  async function runIdOcr(imageData) {
+  async function runIdOcr(imageDataSources) {
     const myRun = ++ocrSequence;
+    const sources = (Array.isArray(imageDataSources) ? imageDataSources : [imageDataSources])
+      .filter((value, index, arr) => typeof value === 'string' && value.startsWith('data:image/') && arr.indexOf(value) === index);
     const status = $('ocrStatus');
     clearPreviousOcrSuggestions();
     status.classList.remove('hidden');
     status.style.background = '#f1f5ff'; status.style.color = '#5f6ed1';
-    status.textContent = 'Preparing your school ID for text reading…';
-    let worker = null;
+    status.textContent = 'Preparing the school ID for text reading…';
+    if (!sources.length) {
+      status.textContent = 'The photo was saved, but the text reader could not prepare the image. Please enter the three details manually.';
+      status.style.background = '#fff7e8'; status.style.color = '#956b21';
+      return;
+    }
     try {
       if (!window.Tesseract || typeof Tesseract.createWorker !== 'function') {
         throw new Error('The ID-reading tool did not load. Check your internet connection, retake a clearer photo, or type the details manually.');
       }
       const updateProgress = msg => {
         if (myRun !== ocrSequence) return;
-        if (msg.status === 'recognizing text') status.textContent = `Reading your school ID… ${Math.round((msg.progress || 0) * 100)}%`;
+        if (msg.status === 'recognizing text') status.textContent = `Reading ID text… ${Math.round((msg.progress || 0) * 100)}%`;
         else if (msg.status === 'loading language traineddata') status.textContent = 'Loading the text reader…';
         else if (msg.status === 'loading tesseract core') status.textContent = 'Starting the text reader…';
       };
-      worker = await getOcrWorker(updateProgress);
-      // Start with the original crop. Try enhanced contrast next only if some fields are
-      // still missing, and use thresholding as a last fallback. The worker is reused across
-      // captures so repeat scans do not reload the OCR engine each time.
+      const worker = await getOcrWorker(updateProgress);
       const variants = [
-        { label: 'clear ID image', mode: 'color' },
-        { label: 'higher contrast', mode: 'contrast' },
-        { label: 'black-and-white text', mode: 'threshold' }
+        { label: 'color', mode: 'color' },
+        { label: 'contrast', mode: 'contrast' },
+        { label: 'threshold', mode: 'threshold' }
       ];
       const results = [];
       let parsed = { studentNumber: '', fullName: '', program: '' };
-      for (let i = 0; i < variants.length; i++) {
+
+      for (let sourceIndex = 0; sourceIndex < sources.length; sourceIndex++) {
         if (myRun !== ocrSequence) return;
-        status.textContent = i === 0 ? 'Reading school ID…' : `Improving text reading (${i + 1} of 3)…`;
-        const prepared = await prepareIdForOcr(imageData, variants[i].mode);
-        const result = await worker.recognize(prepared);
-        const text = (result && result.data && result.data.text) || '';
-        results.push(parseIdText(text));
-        parsed = selectConsensusFields(results);
-        if (countParsedFields(parsed) === 3) break;
+        // First process the guide-matched region. Always check the full frame at least once,
+        // even if the guide crop seems readable, so a browser offset cannot silently win.
+        const passes = sourceIndex === 0 ? variants : (countParsedFields(parsed) === 3 ? [variants[0]] : variants);
+        for (let passIndex = 0; passIndex < passes.length; passIndex++) {
+          if (myRun !== ocrSequence) return;
+          if (sourceIndex === 1) status.textContent = passIndex === 0
+            ? 'Checking the complete saved photo for any missed ID text…'
+            : `Checking the complete photo (${passIndex + 1} of 3)…`;
+          else status.textContent = passIndex === 0 ? 'Reading text inside the ID guide…' : `Improving ID text reading (${passIndex + 1} of 3)…`;
+          const prepared = await prepareIdForOcr(sources[sourceIndex], passes[passIndex].mode);
+          const result = await worker.recognize(prepared);
+          const text = (result && result.data && result.data.text) || '';
+          results.push(parseIdText(text));
+          parsed = selectConsensusFields(results);
+          if (countParsedFields(parsed) === 3 && passIndex >= 0) break;
+        }
       }
       if (myRun !== ocrSequence) return;
       applyOcrValues(parsed);
       const count = countParsedFields(parsed);
       if (count === 3) {
-        status.textContent = 'The ID reader suggested all three details. Please compare each one with your ID before submitting.';
+        status.textContent = 'Three details were suggested from the ID photo. Compare each one with the original ID before submitting.';
         status.style.background = '#eafaf4'; status.style.color = '#188769';
-        showToast('ID details were suggested. Please check them carefully.', 'success');
+        showToast('ID details suggested. Please verify them before submitting.', 'success');
       } else if (count > 0) {
         const missing = [
           !parsed.studentNumber ? 'student ID number' : '',
           !parsed.fullName ? 'name' : '',
           !parsed.program ? 'program/course' : ''
         ].filter(Boolean).join(', ');
-        status.textContent = `The reader could confirm ${count} of 3 details. ${missing ? `Please enter or correct: ${missing}. ` : ''}Unclear text is left blank rather than guessed.`;
+        status.textContent = `The reader found ${count} of 3 details. ${missing ? `Please enter or correct: ${missing}. ` : ''}The complete photo was saved so you can review it.`;
         status.style.background = '#fff7e8'; status.style.color = '#956b21';
       } else {
-        status.textContent = 'The ID text was not clear or consistent enough to fill safely. Try retaking the photo closer, straight-on, with less glare—or type the three details manually.';
+        status.textContent = 'The complete photo was saved, but the text was not clear enough to fill safely. Check the photo and type the three details manually if needed.';
         status.style.background = '#fff7e8'; status.style.color = '#956b21';
       }
     } catch (err) {
       if (myRun !== ocrSequence) return;
-      status.textContent = `${err.message || 'Automatic ID reading failed.'} Please retake the photo or enter the three details manually.`;
+      status.textContent = `${err.message || 'Automatic ID reading failed.'} The full photo is saved; please enter or correct the three details manually.`;
       status.style.background = '#fff2f3'; status.style.color = '#c64e5b';
     } finally {
       activeOcrLogger = null;

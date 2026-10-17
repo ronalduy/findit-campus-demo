@@ -1,3 +1,4 @@
+FINDIT CAMPUS — SCHOOL ID VERIFICATION DEMO (FULL-FRAME CAPTURE FIX)
 FINDIT CAMPUS — SCHOOL ID VERIFICATION DEMO (CAPTURE FIX)
 ========================================================
 
@@ -38,3 +39,9 @@ LATEST UPDATE — SELFIE FACE GUIDE
 - To update an existing GitHub Pages repository, replace index.html, styles.css, app.js, and sw.js in the repository root. Keep manifest.json, pwa-install.js, and icons if they are already present.
 - If a phone still shows the old design, close the site tab, reopen the URL, and refresh. If the old layout persists, clear the site's cached data or use a new private tab to test.
 - This oval is a visual positioning guide only. It does not perform automatic face recognition, face-to-ID matching, or liveness detection. Admin/Teacher must manually verify the application.
+
+
+LATEST CAPTURE FIX
+- The school-ID photo saved for staff review is the full camera frame, not a risky center crop. This prevents the saved image from cutting off the ID when a phone browser uses different preview dimensions.
+- OCR checks the visible guide crop first and then the complete saved photo if needed.
+- After updating GitHub Pages, close the old phone tab and reopen the website so the v6 service-worker cache can activate.
