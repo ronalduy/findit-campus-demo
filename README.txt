@@ -55,3 +55,11 @@ LANDSCAPE ID CAPTURE UPDATE
 - If you are opening the page inside Messenger, use the menu to open the website in Chrome for more reliable camera/orientation behavior.
 - After uploading changed files, close the old browser tab and reopen the site. The service worker cache version has been updated.
 - This is a browser demo. The camera, OCR and approval flow are not proof of identity and still require manual checking.
+
+
+LATEST UPDATE — FULL-SCREEN LANDSCAPE ID CAMERA (v9)
+- When the ID camera opens, the demo now requests fullscreen first and then requests a landscape screen-orientation lock. This is more likely to work in Chrome on Android than locking before fullscreen.
+- In fullscreen landscape, the camera modal changes to a wide layout: camera view on the left, instructions and capture controls on the right. The whole ID camera interface is landscape rather than only the guide.
+- Capture remains disabled while the mobile viewport or camera feed is portrait. If rotation is blocked, enable Auto-rotate and open the HTTPS site in Chrome rather than Messenger's in-app browser.
+- Some browsers (especially in-app browsers and iOS browsers) do not allow a website to force orientation. In those browsers, the user must rotate the phone manually; the site cannot override that restriction.
+- Closing the camera exits fullscreen and unlocks orientation where supported. The service-worker cache name was updated to help fetch the new build.
