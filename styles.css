@@ -252,3 +252,23 @@
   .install-help-card h2{font-size:23px}
 }
 @media(max-width:360px){.brand-copy strong{font-size:12px}.brand-copy small{font-size:6px}.brand-mark{width:31px;height:31px}.install-app-btn{padding:0 8px}}
+
+
+/* Fresh AMC GitHub Pages rebuild: visible install CTA and root-level branding assets */
+.install-hero-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:20px 0 2px;position:relative;z-index:4}
+.install-hero-cta{min-height:48px;padding:0 19px;border-radius:13px;font-size:12px;letter-spacing:.1px;box-shadow:0 10px 24px rgba(0,82,255,.22)}
+.install-hero-cta>span{font-size:20px;line-height:1;font-weight:900}
+.install-hero-note{color:#6f7f98;font-size:11px;font-weight:700}
+.install-app-btn{min-width:100px}
+.install-app-btn .install-label-long{display:inline}
+.install-app-btn .install-label-short{display:none}
+.brand-mark img,.tiny-brand img,.welcome-decoration img,.idcam-brand-logo,.install-help-logo{object-fit:contain;}
+@media(max-width:760px){
+  .install-hero-row{display:grid;grid-template-columns:1fr;gap:8px;margin:17px 0 0;}
+  .install-hero-cta{width:100%;min-height:48px;font-size:13px;}
+  .install-hero-note{text-align:center;font-size:10px;}
+  .install-app-btn{min-width:80px;min-height:37px;padding:0 10px;}
+  .install-app-btn .install-label-long{display:none;}
+  .install-app-btn .install-label-short{display:inline;}
+}
+@media(max-width:360px){.install-app-btn{min-width:70px;padding:0 7px}.install-hero-cta{padding:0 10px}}

@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#07152d"><title>Refresh FindIT Campus</title>
+<style>body{font-family:system-ui,sans-serif;background:#07152d;color:#fff;min-height:100vh;display:grid;place-items:center;margin:0;padding:24px}main{max-width:520px;background:#fff;color:#14243e;border-radius:20px;padding:28px;box-shadow:0 20px 60px #0005}h1{font-size:24px}p{line-height:1.6;color:#64748b}button{padding:13px 17px;border:0;border-radius:10px;background:#0052ff;color:white;font-weight:800;font-size:15px}</style></head>
+<body><main><h1>Refreshing FindIT Campus</h1><p>This helper removes old FindIT browser caches so the updated Ave Maria College logo and Install button can load. Your browser-only demo data may be cleared, so only use this if you are okay resetting local demo data.</p><p id="status">Removing old service workers and cached files…</p><button id="go" hidden>Open updated FindIT Campus</button></main>
+<script>
+(async()=>{
+ try {
+   if ('serviceWorker' in navigator) { const regs = await navigator.serviceWorker.getRegistrations(); await Promise.all(regs.map(r=>r.unregister())); }
+   if ('caches' in window) { const keys = await caches.keys(); await Promise.all(keys.filter(k=>k.toLowerCase().includes('findit-campus')).map(k=>caches.delete(k))); }
+   document.getElementById('status').textContent='Old FindIT caches were cleared. You can now open the updated site.';
+ } catch(e) { document.getElementById('status').textContent='Cache clearing was partly blocked by the browser. Open this site in Chrome and try again.'; }
+ const b=document.getElementById('go'); b.hidden=false; b.addEventListener('click',()=>location.replace('./index.html?fresh=amc-fresh-20261017-r4'));
+ setTimeout(()=>location.replace('./index.html?fresh=amc-fresh-20261017-r4'),1600);
+})();
+</script></body></html>

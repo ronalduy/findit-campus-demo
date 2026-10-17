@@ -1,0 +1,7 @@
+FindIT Campus — Ave Maria College GitHub Pages rebuild
+Build ID: amc-fresh-20261017-r4
+
+This package is for the static GitHub Pages demo only.
+Visible confirmation in the website: Ave Maria College branding and “Install FindIT Campus” hero button.
+
+File layout is FLAT: every app file and image must be uploaded directly into the repository root. Do not upload the outer folder as one nested folder; do not upload the ZIP file itself.

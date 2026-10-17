@@ -97,7 +97,7 @@
   // register service worker from the repository-relative location (works on GitHub Pages project sites).
   if ('serviceWorker' in navigator && window.isSecureContext) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js', { scope: './' })
+      navigator.serviceWorker.register('./sw.js?v=amc-fresh-20261017-r4', { scope: './' })
         .then(reg => reg.update().catch(() => {}))
         .catch(err => console.warn('FindIT Campus service worker registration failed', err));
     });

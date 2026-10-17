@@ -1,0 +1,13 @@
+GITHUB UPLOAD CHECKLIST — amc-fresh-20261017-r4
+
+[ ] Extract this ZIP.
+[ ] Open repo https://github.com/ronalduy/findit-campus-demo.
+[ ] Add file > Upload files.
+[ ] Upload the CONTENTS of the extracted folder at repository root (do not upload the ZIP, do not nest another folder).
+[ ] Replace same-named files.
+[ ] Commit directly to main.
+[ ] Wait for green github-pages deployment.
+[ ] Open https://ronalduy.github.io/findit-campus-demo/reset-cache.html in Chrome on phone.
+[ ] Confirm circular Ave Maria College seal is in header and blue Install button appears.
+
+If old F logo remains, the new index.html did not replace the root index.html or old URL/browser cache is still in use.

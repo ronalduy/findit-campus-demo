@@ -1,9 +1,9 @@
 {
-  "id": "./",
+  "id": "./?app=amc-r4",
   "name": "FindIT Campus - Ave Maria College Lost & Found",
   "short_name": "FindIT Campus",
   "description": "Ave Maria College lost-and-found and student verification demo.",
-  "start_url": "./index.html?source=pwa",
+  "start_url": "./index.html?source=pwa&build=amc-r4",
   "scope": "./",
   "display": "standalone",
   "display_override": [
@@ -19,25 +19,25 @@
   ],
   "icons": [
     {
-      "src": "./icons/icon-192.png",
+      "src": "./icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "./icons/icon-512.png",
+      "src": "./icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "./icons/icon-512-maskable.png",
+      "src": "./icon-512-maskable.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "./icons/icon-180.png",
+      "src": "./icon-180.png",
       "sizes": "180x180",
       "type": "image/png",
       "purpose": "any"

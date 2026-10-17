@@ -3,25 +3,28 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#060b13">
+  <meta name="theme-color" content="#07152d">
+  <meta name="application-name" content="FindIT Campus">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>FindIT Campus | School Lost & Found</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
-  <link rel="manifest" href="./manifest.json">
-  <link rel="icon" type="image/png" href="./icons/favicon-32.png">
-  <link rel="apple-touch-icon" href="./icons/icon-180.png">
+  <link rel="stylesheet" href="./styles.css?v=amc-fresh-20261017-r4">
+  <link rel="manifest" href="./manifest.json?v=amc-fresh-20261017-r4">
+  <link rel="icon" type="image/png" href="./favicon-32.png?v=amc-fresh-20261017-r4">
+  <link rel="apple-touch-icon" href="./icon-180.png?v=amc-fresh-20261017-r4">
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
 <body>
   <div class="ambient ambient-one"></div><div class="ambient ambient-two"></div>
   <header class="topbar">
     <a class="brand" href="#" id="brandHome" aria-label="FindIT Campus home">
-      <span class="brand-mark"><img src="./assets/brand/ave-maria-college-logo.png" alt="Ave Maria College seal"></span>
-      <span class="brand-copy"><strong>FindIT <span>Campus</span></strong><small>School Lost &amp; Found</small></span>
+      <span class="brand-mark"><img src="./ave-maria-college-logo.png?v=amc-fresh-20261017-r4" alt="Ave Maria College seal"></span>
+      <span class="brand-copy"><strong>FindIT <span>Campus</span></strong><small>Ave Maria College · School Lost &amp; Found</small></span>
     </a>
-    <div class="topbar-right"><button class="install-app-btn pwa-install-trigger" id="installAppButton" type="button" aria-label="Install FindIT Campus"><span aria-hidden="true">↓</span><span class="install-label-long">Install App</span><span class="install-label-short">Install</span></button><span class="status-dot"></span><span>Campus demo</span><span class="top-separator"></span><span class="top-shield">◆</span><span>Private by design</span></div>
+    <div class="topbar-right"><button class="install-app-btn pwa-install-trigger" id="installAppButton" type="button" aria-label="Install FindIT Campus"><span aria-hidden="true">↓</span><span class="install-label-long">Install App</span><span class="install-label-short">Install</span></button><span class="status-dot"></span><span>AMC edition · Fresh build</span><span class="top-separator"></span><span class="top-shield">◆</span><span>School demo · v4</span></div>
   </header>
 
   <main id="app" class="app-shell">
@@ -30,11 +33,12 @@
         <div class="hero-label"><span class="spark">✦</span> A safer campus community</div>
         <h1>Lost something?<br><span>Find your way back.</span></h1>
         <p class="hero-description">A simple, trusted place for students and school staff to post and find lost belongings around campus.</p>
+        <div class="install-hero-row"><button type="button" class="btn btn-primary install-hero-cta pwa-install-trigger" aria-label="Install FindIT Campus on this device"><span aria-hidden="true">↓</span> Install FindIT Campus</button><span class="install-hero-note">Add to your phone home screen</span></div>
         <div class="hero-art" aria-hidden="true">
           <div class="orbit orbit-a"></div><div class="orbit orbit-b"></div>
           <div class="floating-card card-tag"><span class="mini-icon aqua">⌕</span><div><strong>Search campus items</strong><small>Lost &amp; found, in one place</small></div></div>
           <div class="floating-card card-verify"><span class="mini-icon violet">✓</span><div><strong>School verified</strong><small>Accounts approved by staff</small></div></div>
-          <div class="phone-mock"><div class="phone-notch"></div><div class="phone-header"><span class="tiny-brand"><img src="./assets/brand/ave-maria-college-logo.png" alt=""></span><span class="phone-menu">•••</span></div><div class="phone-greeting">Hello, student 👋<small>What are you looking for?</small></div><div class="phone-search">⌕ &nbsp; Search items...</div><div class="phone-tabs"><b>Lost Items</b><span>Found Items</span></div><div class="phone-item"><div class="object-art laptop-art">▰</div><div><strong>Black laptop bag</strong><small>Library · Today</small></div><i></i></div><div class="phone-item"><div class="object-art bottle-art">◒</div><div><strong>Blue water bottle</strong><small>Room 204 · Yesterday</small></div><i></i></div><div class="phone-nav"><span>⌂</span><span>⌕</span><span>▣</span><span>◉</span></div></div>
+          <div class="phone-mock"><div class="phone-notch"></div><div class="phone-header"><span class="tiny-brand"><img src="./ave-maria-college-logo.png?v=amc-fresh-20261017-r4" alt=""></span><span class="phone-menu">•••</span></div><div class="phone-greeting">Hello, student 👋<small>What are you looking for?</small></div><div class="phone-search">⌕ &nbsp; Search items...</div><div class="phone-tabs"><b>Lost Items</b><span>Found Items</span></div><div class="phone-item"><div class="object-art laptop-art">▰</div><div><strong>Black laptop bag</strong><small>Library · Today</small></div><i></i></div><div class="phone-item"><div class="object-art bottle-art">◒</div><div><strong>Blue water bottle</strong><small>Room 204 · Yesterday</small></div><i></i></div><div class="phone-nav"><span>⌂</span><span>⌕</span><span>▣</span><span>◉</span></div></div>
           <div class="hero-sparkle sparkle-one">✦</div><div class="hero-sparkle sparkle-two">✧</div><div class="hero-sparkle sparkle-three">✦</div>
         </div>
         <div class="hero-foot"><span>✦</span> Helping lost belongings find their owners.</div>
@@ -104,7 +108,7 @@
         <div class="demo-tools"><div><strong>Demo data tools</strong><p>Applications and items are saved in this browser only.</p></div><button id="resetDemoBtn" class="btn btn-danger-outline btn-sm">Reset demo data</button></div>
       </section>
       <section id="studentPanel" class="hidden">
-        <div class="student-welcome-strip"><div class="welcome-icon">✦</div><div><strong>Your campus, a little easier.</strong><p>Browse reports and visit the Admin/Teacher if you recognize an item.</p></div><span class="welcome-decoration"><img src="./assets/brand/ave-maria-college-logo.png" alt="Ave Maria College"></span></div>
+        <div class="student-welcome-strip"><div class="welcome-icon">✦</div><div><strong>Your campus, a little easier.</strong><p>Browse reports and visit the Admin/Teacher if you recognize an item.</p></div><span class="welcome-decoration"><img src="./ave-maria-college-logo.png?v=amc-fresh-20261017-r4" alt="Ave Maria College"></span></div>
         <nav class="student-tabs" aria-label="Items navigation"><button class="student-tab active" data-item-tab="lost"><span>⌕</span> Lost Items <b id="lostTabCount">0</b></button><button class="student-tab" data-item-tab="found"><span>◈</span> Found Items <b id="foundTabCount">0</b></button></nav>
         <section class="items-toolbar"><div><h2 id="itemSectionTitle">Lost Items</h2><p id="itemSectionDesc">Items reported missing by students and school staff.</p></div><div class="search-tools"><label class="search-box"><span>⌕</span><input type="search" id="itemSearch" placeholder="Search items..."></label><select id="categoryFilter" aria-label="Filter by category"><option value="all">All categories</option><option>Personal belongings</option><option>Electronics</option><option>School supplies</option><option>Clothing</option><option>IDs and cards</option><option>Others</option></select></div></section>
         <div id="studentItemsGrid" class="items-grid"></div>
@@ -113,13 +117,13 @@
     </section>
   </main>
 
-  <footer class="site-footer"><span>© 2026 FindIT Campus</span><span>Designed for our school community <b>✦</b></span><span class="footer-demo">STUDENT PROJECT DEMO</span></footer>
+  <footer class="site-footer"><span>© 2026 FindIT Campus</span><span>Designed for our school community <b>✦</b></span><span class="footer-demo">AVE MARIA COLLEGE EDITION · BUILD R4</span></footer>
 
   <div id="cameraModal" class="modal hidden idcam-modal" role="dialog" aria-modal="true" aria-labelledby="cameraTitle">
     <div class="modal-backdrop" data-close-camera></div>
     <section class="modal-card camera-modal-card idcam-shell">
       <header class="idcam-topbar">
-        <div class="idcam-brand"><img class="idcam-brand-logo" src="./assets/brand/ave-maria-college-logo.png" alt="Ave Maria College seal"><div><strong>FindIT Campus</strong><small>Secure student verification</small></div></div>
+        <div class="idcam-brand"><img class="idcam-brand-logo" src="./ave-maria-college-logo.png?v=amc-fresh-20261017-r4" alt="Ave Maria College seal"><div><strong>FindIT Campus</strong><small>Secure student verification</small></div></div>
         <div class="idcam-step"><span class="idcam-live-pulse"></span><span id="cameraStepLabel">DOCUMENT CAPTURE</span></div>
         <button class="idcam-close" type="button" data-close-camera aria-label="Close camera">×</button>
       </header>
@@ -159,7 +163,7 @@
     <button class="install-help-backdrop" type="button" data-close-install aria-label="Close install help"></button>
     <section class="install-help-card">
       <button class="install-help-close" type="button" data-close-install aria-label="Close">×</button>
-      <img src="./assets/brand/ave-maria-college-logo.png" alt="Ave Maria College seal" class="install-help-logo">
+      <img src="./ave-maria-college-logo.png?v=amc-fresh-20261017-r4" alt="Ave Maria College seal" class="install-help-logo">
       <span class="install-help-kicker">MOBILE APP</span>
       <h2 id="installHelpTitle">Install FindIT Campus</h2>
       <p id="installHelpText">Add FindIT Campus to your phone's home screen for an app-like experience.</p>
@@ -171,7 +175,7 @@
 
   <div id="applicationModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="applicationModalTitle"><div class="modal-backdrop" data-close-application></div><div class="modal-card application-modal-card"><button class="modal-close" type="button" data-close-application aria-label="Close details">×</button><div id="applicationModalBody"></div></div></div>
   <div id="toastHost" class="toast-host" aria-live="polite"></div>
-  <script src="./app.js"></script>
-  <script src="./pwa-install.js"></script>
+  <script src="./app.js?v=amc-fresh-20261017-r4"></script>
+  <script src="./pwa-install.js?v=amc-fresh-20261017-r4"></script>
 </body>
 </html>
