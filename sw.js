@@ -1,4 +1,4 @@
-const CACHE_NAME = 'findit-campus-id-demo-v11-preview-matched-id-selfie';
+const CACHE_NAME = 'findit-campus-id-demo-v13-portrait-page-landscape-id-frame';
 const APP_FILES = [
   './', './index.html', './styles.css', './app.js', './manifest.json',
   './icons/icon-180.png', './icons/icon-192.png', './icons/icon-512.png'

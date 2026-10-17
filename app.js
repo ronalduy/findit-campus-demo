@@ -162,79 +162,56 @@
       if (type === 'id') $('retakeIdBtn').disabled = true; else $('retakeSelfieBtn').disabled = true;
     }
   }
-  function isPortraitMobileLayout() {
-    return window.matchMedia('(max-width: 760px)').matches && window.matchMedia('(orientation: portrait)').matches;
-  }
+  // The page stays in its normal orientation. Only the ID camera frame is landscape.
   function isLandscapeIdFrameReady(video = $('cameraVideo')) {
-    if (cameraType !== 'id') return true;
-    // The capture code can rotate a portrait camera feed into the landscape ID guide.
-    // We only block while the phone/browser viewport itself is still portrait.
-    return !isPortraitMobileLayout() && video.videoWidth > 0 && video.videoHeight > 0;
+    return Boolean(video && video.videoWidth > 0 && video.videoHeight > 0);
   }
 
   function clearVideoPresentation(video = $('cameraVideo')) {
-    ['position','width','height','max-width','max-height','left','top','transform','transform-origin','object-fit','object-position','z-index'].forEach(prop => video.style.removeProperty(prop));
+    ['position','width','height','max-width','max-height','left','top','right','bottom','inset','transform','transform-origin','object-fit','object-position','z-index'].forEach(prop => video.style.removeProperty(prop));
     delete video.dataset.finditRotate;
   }
 
-  // Make the live feed fit the guide intentionally. Some mobile in-app browsers
-  // report a portrait video frame even after the page has become landscape. Rotate
-  // that ID feed for display, then use the same rotation in the saved canvas.
+  // Keep the page and camera feed unrotated. The landscape ID frame crops a centered
+  // horizontal view from the live feed; captureVideoView() uses the same aspect ratio.
+  // The selfie frame remains portrait with its oval guide.
   function syncVideoPresentation(type = cameraType) {
     const video = $('cameraVideo');
     const frame = $('cameraFrame');
     if (!video || !frame || !video.videoWidth || !video.videoHeight) return;
-    const rect = frame.getBoundingClientRect();
-    if (!rect.width || !rect.height) return;
     clearVideoPresentation(video);
-    const rotateIdFeed = type === 'id' && rect.width > rect.height && video.videoHeight > video.videoWidth;
     video.style.setProperty('position', 'absolute', 'important');
-    video.style.setProperty('left', '50%', 'important');
-    video.style.setProperty('top', '50%', 'important');
-    video.style.setProperty('transform-origin', 'center center', 'important');
+    video.style.setProperty('inset', '0', 'important');
+    video.style.setProperty('left', '0', 'important');
+    video.style.setProperty('top', '0', 'important');
+    video.style.setProperty('width', '100%', 'important');
+    video.style.setProperty('height', '100%', 'important');
     video.style.setProperty('max-width', 'none', 'important');
     video.style.setProperty('max-height', 'none', 'important');
+    video.style.setProperty('transform', 'none', 'important');
+    video.style.setProperty('transform-origin', 'center center', 'important');
     video.style.setProperty('object-fit', 'cover', 'important');
     video.style.setProperty('object-position', 'center center', 'important');
-    if (rotateIdFeed) {
-      // Before a 90-degree rotation, swap the video element's CSS width/height so
-      // its post-rotation bounds exactly match the landscape camera frame.
-      video.style.setProperty('width', `${Math.round(rect.height)}px`, 'important');
-      video.style.setProperty('height', `${Math.round(rect.width)}px`, 'important');
-      video.style.setProperty('transform', 'translate(-50%, -50%) rotate(90deg)', 'important');
-      video.dataset.finditRotate = '90';
-    } else {
-      video.style.setProperty('width', '100%', 'important');
-      video.style.setProperty('height', '100%', 'important');
-      video.style.setProperty('transform', 'translate(-50%, -50%)', 'important');
-      delete video.dataset.finditRotate;
-    }
+    delete video.dataset.finditRotate;
   }
   function syncIdLandscapeGuard() {
-    const notice = $('cameraOrientationNotice');
+    // No phone rotation is required. Keep the page portrait and allow capture as soon
+    // as the browser has a valid camera frame.
+    $('cameraOrientationNotice').classList.add('hidden');
     const video = $('cameraVideo');
-    const needsLandscape = cameraType === 'id' && !isLandscapeIdFrameReady(video);
-    notice.classList.toggle('hidden', !needsLandscape);
-    $('takePhotoBtn').disabled = needsLandscape || !video.videoWidth;
-    if (needsLandscape) {
-      notice.textContent = isPortraitMobileLayout()
-        ? 'Rotate your phone sideways to landscape. If you are using Messenger, open this site in Chrome, then reopen the ID camera. Capture is paused until the phone is landscape.'
-        : 'The camera is still sending a portrait image. Close the camera, rotate the phone sideways, and reopen it in Chrome. Capture is paused to prevent a wrongly cropped ID.';
-    }
+    $('takePhotoBtn').disabled = !(video.videoWidth > 0 && video.videoHeight > 0);
   }
   function getCameraConstraints(type) {
-    const video = {
-      facingMode: { ideal: type === 'id' ? 'environment' : 'user' },
-      width: { ideal: 1920 },
-      height: { ideal: 1080 }
+    // Do not lock device orientation or ask the browser to rotate the camera stream.
+    // CSS keeps the ID preview landscape and crops the centered visible portion.
+    return {
+      audio: false,
+      video: {
+        facingMode: { ideal: type === 'id' ? 'environment' : 'user' },
+        width: { ideal: 1920 },
+        height: { ideal: 1080 }
+      }
     };
-    if (type === 'id') {
-      // Ask the browser for a landscape feed matching the ID-card frame.
-      // The camera may ignore ideal values; the orientation guard below prevents bad captures.
-      video.aspectRatio = { ideal: 85.6 / 53.98 };
-      video.resizeMode = { ideal: 'crop-and-scale' };
-    }
-    return { audio: false, video };
   }
   async function waitForVideoDimensions(video) {
     if (video.videoWidth && video.videoHeight) return;
@@ -246,8 +223,8 @@
     });
   }
   async function startCamera(type) {
-    // Keep camera opening tied to the user's click: expose the modal, set the
-    // correct layout, and request fullscreen before awaiting camera permissions.
+    // Open the camera inside the normal page modal. The page itself never rotates
+    // or enters fullscreen; only the ID preview/frame uses a landscape aspect ratio.
     closeCamera();
     cameraType = type;
     const modal = $('cameraModal');
@@ -256,39 +233,19 @@
 
     $('cameraTitle').textContent = type === 'id' ? 'Capture your school ID' : 'Take your live selfie';
     $('cameraInstruction').textContent = type === 'id'
-      ? 'Landscape camera mode: turn your phone sideways. Keep the complete ID inside the horizontal guide.'
-      : 'Center your face inside the oval guide. Keep your eyes visible and use even lighting.';
+      ? 'Keep your phone upright. Hold the school ID horizontally and centered inside the wide frame.'
+      : 'Keep your phone upright and center your face inside the oval guide. Use even lighting.';
     $('cameraOrientationNotice').classList.add('hidden');
     const frame = $('cameraFrame');
     frame.classList.toggle('id-capture-mode', type === 'id');
     frame.classList.toggle('selfie-capture-mode', type === 'selfie');
     $('cameraFrameOverlay').classList.toggle('id-capture-overlay', type === 'id');
     card.classList.toggle('face-camera-card', type === 'selfie');
-    card.classList.toggle('landscape-id-layout', type === 'id');
-    modal.classList.toggle('camera-fullscreen-fallback', type === 'id');
     clearVideoPresentation(video);
     $('cameraError').classList.add('hidden');
     $('cameraLoading').classList.remove('hidden');
     $('takePhotoBtn').disabled = true;
     modal.classList.remove('hidden');
-
-    // A genuine fullscreen request is required for the browser to allow
-    // orientation locking on supported mobile browsers. If it is rejected,
-    // the CSS fallback still fills the available web viewport.
-    let fullscreenPromise = null;
-    if (type === 'id') {
-      const requestFullscreen = modal.requestFullscreen || modal.webkitRequestFullscreen;
-      if (typeof requestFullscreen === 'function') {
-        try {
-          fullscreenPromise = Promise.resolve(requestFullscreen.call(modal, { navigationUI: 'hide' }))
-            .then(() => true)
-            .catch((err) => { console.info('Fullscreen is not supported in this browser context.', err); return false; });
-        } catch (err) {
-          console.info('Fullscreen request was not accepted.', err);
-          fullscreenPromise = Promise.resolve(false);
-        }
-      }
-    }
 
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       $('cameraLoading').classList.add('hidden');
@@ -298,24 +255,16 @@
     }
 
     try {
-      if (type === 'id') {
-        if (fullscreenPromise) await fullscreenPromise;
-        // Try to lock orientation after fullscreen is entered. Many in-app
-        // browsers (including Messenger) reject this; users should open Chrome.
-        if (screen.orientation && typeof screen.orientation.lock === 'function') {
-          try { await screen.orientation.lock('landscape'); } catch (_) { /* manual landscape fallback below */ }
-        }
-      }
       cameraStream = await navigator.mediaDevices.getUserMedia(getCameraConstraints(type));
       video.srcObject = cameraStream;
       await video.play();
       await waitForVideoDimensions(video);
-      // Wait for the modal/fullscreen layout to settle before mapping preview pixels.
+      // Let the portrait modal and landscape ID frame finish layout before capture.
       await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
       syncVideoPresentation(type);
       $('cameraLoading').classList.add('hidden');
       if (type === 'id') syncIdLandscapeGuard();
-      else $('takePhotoBtn').disabled = !video.videoWidth;
+      else $('takePhotoBtn').disabled = !(video.videoWidth > 0 && video.videoHeight > 0);
     } catch (err) {
       $('cameraLoading').classList.add('hidden');
       $('cameraError').textContent = err.name === 'NotAllowedError'
@@ -333,21 +282,10 @@
     const modal = $('cameraModal');
     stopCamera();
     modal.classList.add('hidden');
-    modal.classList.remove('camera-fullscreen-fallback');
     const card = modal.querySelector('.camera-modal-card');
-    card.classList.remove('landscape-id-layout');
     card.classList.remove('face-camera-card');
     cameraType = null;
     clearVideoPresentation($('cameraVideo'));
-    // Exit fullscreen and restore normal orientation after capturing or canceling.
-    if (document.fullscreenElement === modal && document.exitFullscreen) {
-      document.exitFullscreen().catch(() => {});
-    } else if (document.webkitFullscreenElement === modal && document.webkitExitFullscreen) {
-      try { document.webkitExitFullscreen(); } catch (_) {}
-    }
-    if (screen.orientation && typeof screen.orientation.unlock === 'function') {
-      try { screen.orientation.unlock(); } catch (_) {}
-    }
   }
   document.querySelectorAll('[data-camera]').forEach(button => button.addEventListener('click', () => startCamera(button.dataset.camera)));
   document.querySelectorAll('[data-close-camera]').forEach(button => button.addEventListener('click', closeCamera));
@@ -369,31 +307,18 @@
   window.addEventListener('resize', refreshCameraForOrientation);
   $('cameraVideo').addEventListener('resize', refreshCameraForOrientation);
 
-  // Return the camera pixels in the same orientation as the live preview.
-  // A portrait ID stream may be rotated 90 degrees by syncVideoPresentation().
+  // Do not rotate the source pixels. The browser page stays upright, and the CSS
+  // preview uses object-fit: cover within the frame. The save routine below makes
+  // the same centered crop based on the frame's measured aspect ratio.
   function getOrientedVideoSource(video) {
     const sourceWidth = video.videoWidth;
     const sourceHeight = video.videoHeight;
     if (!sourceWidth || !sourceHeight) throw new Error('The camera frame is not ready. Please reopen the camera and try again.');
-    if (video.dataset.finditRotate === '90') {
-      const oriented = document.createElement('canvas');
-      oriented.width = sourceHeight;
-      oriented.height = sourceWidth;
-      const ctx = oriented.getContext('2d', { willReadFrequently: true });
-      ctx.imageSmoothingEnabled = true;
-      ctx.imageSmoothingQuality = 'high';
-      ctx.translate(oriented.width / 2, oriented.height / 2);
-      ctx.rotate(Math.PI / 2);
-      ctx.drawImage(video, -sourceWidth / 2, -sourceHeight / 2, sourceWidth, sourceHeight);
-      return { source: oriented, width: oriented.width, height: oriented.height };
-    }
     return { source: video, width: sourceWidth, height: sourceHeight };
   }
 
-  // Save the centered portion of the oriented video that corresponds to the
-  // actual visible frame aspect ratio. Use this for BOTH ID and selfie so the
-  // submitted photo matches the live preview instead of saving the uncropped
-  // camera sensor frame.
+  // Save the centered crop matching the visible video frame aspect ratio. Because
+  // the video is not rotated, this same crop is used for both the ID and selfie.
   function captureVideoView(video, targetElement, outputCanvas, maxDimension = 2400, quality = 0.94) {
     const oriented = getOrientedVideoSource(video);
     const rect = targetElement.getBoundingClientRect();
@@ -448,7 +373,7 @@
     const type = cameraType;
     if (type === 'id' && !isLandscapeIdFrameReady(video)) {
       syncIdLandscapeGuard();
-      showToast('Rotate the phone sideways and reopen the ID camera before capturing.', 'warning');
+      showToast('The camera is still opening. Please wait a moment and try again.', 'warning');
       return;
     }
     const canvas = $('captureCanvas');
@@ -478,7 +403,7 @@
 
       closeCamera();
       setPhotoStage(type, savedPhoto);
-      showToast('Saved a landscape crop matching the camera guide. Reading the ID automatically…', 'success');
+      showToast('Saved the centered landscape ID frame. Reading the ID automatically…', 'success');
       runIdOcr(ocrSources);
       return;
     }
