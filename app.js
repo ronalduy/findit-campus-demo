@@ -11,6 +11,7 @@
   let studentItemTab = 'lost';
   let cameraStream = null;
   let cameraType = null;
+  let previewAnimationFrame = 0;
   let photoIdData = null;
   let photoSelfieData = null;
   let lastOcrAutofill = { studentNumber: '', fullName: '', program: '' };
@@ -168,31 +169,104 @@
   }
 
   function clearVideoPresentation(video = $('cameraVideo')) {
-    ['position','width','height','max-width','max-height','left','top','right','bottom','inset','transform','transform-origin','object-fit','object-position','z-index'].forEach(prop => video.style.removeProperty(prop));
+    ['position','width','height','max-width','max-height','left','top','right','bottom','inset','transform','transform-origin','object-fit','object-position','z-index','opacity','pointer-events'].forEach(prop => video.style.removeProperty(prop));
     delete video.dataset.finditRotate;
   }
 
-  // Keep the page and camera feed unrotated. The landscape ID frame crops a centered
-  // horizontal view from the live feed; captureVideoView() uses the same aspect ratio.
-  // The selfie frame remains portrait with its oval guide.
+  // The page remains portrait. We render a landscape crop for the ID and a portrait
+  // crop for the selfie into a canvas. The same canvas is shown live and saved, so
+  // the captured image cannot shift relative to the visible guide.
   function syncVideoPresentation(type = cameraType) {
     const video = $('cameraVideo');
     const frame = $('cameraFrame');
-    if (!video || !frame || !video.videoWidth || !video.videoHeight) return;
-    clearVideoPresentation(video);
+    const preview = $('cameraPreviewCanvas');
+    if (!video || !frame || !preview) return;
+
     video.style.setProperty('position', 'absolute', 'important');
     video.style.setProperty('inset', '0', 'important');
-    video.style.setProperty('left', '0', 'important');
-    video.style.setProperty('top', '0', 'important');
     video.style.setProperty('width', '100%', 'important');
     video.style.setProperty('height', '100%', 'important');
     video.style.setProperty('max-width', 'none', 'important');
     video.style.setProperty('max-height', 'none', 'important');
-    video.style.setProperty('transform', 'none', 'important');
-    video.style.setProperty('transform-origin', 'center center', 'important');
-    video.style.setProperty('object-fit', 'cover', 'important');
-    video.style.setProperty('object-position', 'center center', 'important');
-    delete video.dataset.finditRotate;
+    video.style.setProperty('opacity', '0', 'important');
+    video.style.setProperty('pointer-events', 'none', 'important');
+    video.style.setProperty('z-index', '0', 'important');
+
+    preview.style.position = 'absolute';
+    preview.style.inset = '0';
+    preview.style.width = '100%';
+    preview.style.height = '100%';
+    preview.style.display = 'block';
+    preview.style.zIndex = '1';
+    preview.style.pointerEvents = 'none';
+  }
+
+  function getCenteredCoverCrop(sourceWidth, sourceHeight, targetAspect) {
+    let sx = 0, sy = 0, sw = sourceWidth, sh = sourceHeight;
+    const sourceAspect = sourceWidth / sourceHeight;
+    if (sourceAspect > targetAspect) {
+      sw = sourceHeight * targetAspect;
+      sx = (sourceWidth - sw) / 2;
+    } else if (sourceAspect < targetAspect) {
+      sh = sourceWidth / targetAspect;
+      sy = (sourceHeight - sh) / 2;
+    }
+    sx = Math.max(0, Math.min(sourceWidth - 1, sx));
+    sy = Math.max(0, Math.min(sourceHeight - 1, sy));
+    sw = Math.max(1, Math.min(sourceWidth - sx, sw));
+    sh = Math.max(1, Math.min(sourceHeight - sy, sh));
+    return { sx, sy, sw, sh };
+  }
+
+  function drawCameraPreviewFrame() {
+    const video = $('cameraVideo');
+    const frame = $('cameraFrame');
+    const preview = $('cameraPreviewCanvas');
+    if (!video || !frame || !preview || !cameraType || video.readyState < 2 || !video.videoWidth || !video.videoHeight) return false;
+    const rect = frame.getBoundingClientRect();
+    if (!rect.width || !rect.height) return false;
+
+    // Use the frame's actual on-screen aspect ratio (ID landscape, selfie portrait).
+    const targetAspect = rect.width / rect.height;
+    const crop = getCenteredCoverCrop(video.videoWidth, video.videoHeight, targetAspect);
+    const targetWidth = Math.max(1, Math.round(crop.sw));
+    const targetHeight = Math.max(1, Math.round(targetWidth / targetAspect));
+    if (preview.width !== targetWidth) preview.width = targetWidth;
+    if (preview.height !== targetHeight) preview.height = targetHeight;
+
+    const context = preview.getContext('2d', { alpha: false });
+    if (!context) return false;
+    context.setTransform(1, 0, 0, 1, 0, 0);
+    context.clearRect(0, 0, preview.width, preview.height);
+    context.imageSmoothingEnabled = true;
+    context.imageSmoothingQuality = 'high';
+
+    // Selfie preview mirrors the front camera in the usual way; the saved selfie
+    // is rendered by this same canvas, so it keeps the same centering/mirroring.
+    if (cameraType === 'selfie') {
+      context.translate(preview.width, 0);
+      context.scale(-1, 1);
+    }
+    context.drawImage(video, crop.sx, crop.sy, crop.sw, crop.sh, 0, 0, preview.width, preview.height);
+    return true;
+  }
+
+  function stopPreviewRenderer() {
+    if (previewAnimationFrame) cancelAnimationFrame(previewAnimationFrame);
+    previewAnimationFrame = 0;
+  }
+
+  function startPreviewRenderer() {
+    stopPreviewRenderer();
+    const render = () => {
+      if (!cameraStream || !cameraType || $('cameraModal').classList.contains('hidden')) {
+        previewAnimationFrame = 0;
+        return;
+      }
+      drawCameraPreviewFrame();
+      previewAnimationFrame = requestAnimationFrame(render);
+    };
+    previewAnimationFrame = requestAnimationFrame(render);
   }
   function syncIdLandscapeGuard() {
     // No phone rotation is required. Keep the page portrait and allow capture as soon
@@ -262,6 +336,8 @@
       // Let the portrait modal and landscape ID frame finish layout before capture.
       await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
       syncVideoPresentation(type);
+      drawCameraPreviewFrame();
+      startPreviewRenderer();
       $('cameraLoading').classList.add('hidden');
       if (type === 'id') syncIdLandscapeGuard();
       else $('takePhotoBtn').disabled = !(video.videoWidth > 0 && video.videoHeight > 0);
@@ -274,6 +350,7 @@
     }
   }
   function stopCamera() {
+    stopPreviewRenderer();
     if (cameraStream) cameraStream.getTracks().forEach(track => track.stop());
     cameraStream = null;
     $('cameraVideo').srcObject = null;
@@ -299,6 +376,7 @@
       orientationRefreshTimer = null;
       if (!cameraType || !cameraStream) return;
       syncVideoPresentation(cameraType);
+      drawCameraPreviewFrame();
       if (cameraType === 'id') syncIdLandscapeGuard();
       else $('takePhotoBtn').disabled = !$('cameraVideo').videoWidth;
     }, 180);
@@ -384,8 +462,9 @@
       let displayedPhoto;
       let fullSourceForOcr = '';
       try {
-        // Save exactly the visible camera window; it matches the live landscape frame.
-        displayedPhoto = captureVideoView(video, $('cameraFrame'), canvas, 2400, 0.95);
+        // Refresh one frame, then save the same canvas shown live inside the landscape guide.
+        if (!drawCameraPreviewFrame()) throw new Error('The camera preview is not ready yet. Please wait and try again.');
+        displayedPhoto = $('cameraPreviewCanvas').toDataURL('image/jpeg', 0.95);
         // The wider image is a secondary OCR fallback only, never the saved preview.
         try { fullSourceForOcr = captureFullSourceForOcr(video); } catch (ocrFrameError) {
           console.warn('The wider OCR fallback could not be created.', ocrFrameError);
@@ -403,7 +482,7 @@
 
       closeCamera();
       setPhotoStage(type, savedPhoto);
-      showToast('Saved the centered landscape ID frame. Reading the ID automatically…', 'success');
+      showToast('Saved the same centered landscape view shown in the camera. Reading the ID automatically…', 'success');
       runIdOcr(ocrSources);
       return;
     }
@@ -413,7 +492,8 @@
     // used the entire raw camera frame and the face looked off-center/smaller.
     let selfieData;
     try {
-      selfieData = captureVideoView(video, $('cameraFrame'), canvas, 1600, 0.90);
+      if (!drawCameraPreviewFrame()) throw new Error('The selfie preview is not ready yet. Please wait and try again.');
+      selfieData = $('cameraPreviewCanvas').toDataURL('image/jpeg', 0.90);
       try { selfieData = await compressDataUrl(selfieData, 1400, 0.84); } catch (_) {}
     } catch (captureError) {
       console.error('Selfie capture failed:', captureError);
@@ -422,7 +502,7 @@
     }
     closeCamera();
     setPhotoStage(type, selfieData);
-    showToast('Live selfie captured. It will be shown to the Admin/Teacher for manual review.');
+    showToast('Saved the same centered selfie view shown in the camera. It will be shown to the Admin/Teacher for manual review.');
   });
   document.querySelectorAll('[data-close-application]').forEach(button => button.addEventListener('click', closeApplicationModal));
   document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeCamera(); closeApplicationModal(); } });

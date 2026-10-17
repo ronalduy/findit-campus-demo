@@ -76,3 +76,11 @@
   .camera-frame.id-capture-mode .camera-frame-overlay i { width: 18px; height: 18px; }
   .camera-controls .btn { min-height: 46px; }
 }
+
+
+/* Camera alignment fix: render preview and saved photo from the same canvas crop. */
+.camera-frame { position: relative; overflow: hidden; }
+.camera-frame #cameraVideo { z-index: 0 !important; opacity: 0 !important; pointer-events: none !important; }
+.camera-frame .camera-preview-canvas { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; display: block; pointer-events: none; }
+.camera-frame .camera-frame-overlay { z-index: 2; }
+.camera-frame .camera-loading { z-index: 3; }

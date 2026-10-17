@@ -1,34 +1,21 @@
-FINDIT CAMPUS — PORTRAIT PAGE / LANDSCAPE ID FRAME
-=================================================
+FINDIT CAMPUS — CAMERA CANVAS ALIGNMENT UPDATE
 
-This update matches the requested camera behavior:
-- The website page and registration modal stay in portrait.
-- The website does NOT request fullscreen and does NOT lock or rotate the phone screen.
-- Only the school ID preview frame is landscape-shaped.
-- Keep the phone upright and hold the physical school ID horizontally, centered inside the wide preview frame.
-- The selfie preview stays portrait with the oval face guide.
-- The saved ID and selfie are center-cropped according to the visible frame's aspect ratio so they match the live preview crop.
-- OCR runs after the ID photo is captured. OCR can still make mistakes; review and correct the fields.
+Purpose
+- Keep the page in portrait; no screen orientation lock is requested.
+- ID camera frame stays landscape while the page stays portrait.
+- Selfie frame stays portrait with the oval face guide.
+- The camera preview is now drawn into a canvas using a centered crop that matches the frame's aspect ratio.
+- The exact preview canvas is what is saved as the ID/selfie image. This removes the separate CSS-video-versus-canvas crop mismatch that caused saved images to shift.
+- The front-camera selfie preview and saved selfie are mirrored consistently.
 
-FILES TO UPDATE ON GITHUB PAGES
--------------------------------
-Upload these files directly to the root of your GitHub repository and replace the old copies:
-- index.html
-- styles.css
-- app.js
-- sw.js
+Upload to GitHub Pages
+1. Extract this folder.
+2. In the repository's main/root folder, upload and replace index.html, styles.css, app.js, sw.js, and manifest.json if included.
+3. Keep the existing icons folder.
+4. Commit changes to main and wait for Pages deployment.
+5. On the phone, open the website in Chrome/Safari directly (not Messenger's in-app browser), close old tabs, and reload.
 
-Keep the existing manifest.json and icons folder. Click Commit changes, wait for GitHub Pages to deploy, then open the site in a fresh tab on your phone. The service-worker cache name has been changed to v13 to help the browser fetch the new files.
-
-CAMERA TEST
------------
-1. Use Chrome on Android or Safari on iPhone, not the Messenger in-app browser if it causes camera problems.
-2. Allow camera access.
-3. Keep your phone upright.
-4. Hold the school ID horizontally and center it in the landscape frame.
-5. Take a test image and check the captured preview before submitting.
-6. For the selfie, center the face inside the oval guide; the page stays upright.
-
-IMPORTANT LIMITS
-----------------
-This is a front-end demo. Records are stored in the current browser, not shared with other devices. Camera capture and OCR do not prove identity. Use mock student data and sample ID images during testing; do not upload real student IDs to a public repository.
+Important
+- This is still an HTML/JavaScript demo with browser-local storage, not the final PHP/MySQL system.
+- OCR may still misread unclear or small text; keep fields editable and verify manually.
+- Do not use real student ID/selfie data in a public test site.
