@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#0a1b35">
+  <meta name="theme-color" content="#060b13">
   <title>FindIT Campus | School Lost & Found</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -114,7 +114,45 @@
 
   <footer class="site-footer"><span>© 2026 FindIT Campus</span><span>Designed for our school community <b>✦</b></span><span class="footer-demo">STUDENT PROJECT DEMO</span></footer>
 
-  <div id="cameraModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="cameraTitle"><div class="modal-backdrop" data-close-camera></div><div class="modal-card camera-modal-card"><button class="modal-close" type="button" data-close-camera aria-label="Close camera">×</button><div class="modal-heading"><span class="eyebrow">LIVE CAPTURE</span><h2 id="cameraTitle">Capture photo</h2><p id="cameraInstruction">Position the item clearly inside the frame.</p></div><div id="cameraOrientationNotice" class="camera-orientation-notice hidden" role="status">The page remains portrait. Only the ID camera frame is landscape.</div><div id="cameraFrame" class="camera-frame"><video id="cameraVideo" autoplay playsinline muted></video><canvas id="cameraPreviewCanvas" class="camera-preview-canvas" aria-hidden="true"></canvas><div id="cameraFrameOverlay" class="camera-frame-overlay"><span></span><i></i></div><div id="cameraLoading" class="camera-loading hidden"><span class="spinner"></span><p>Opening camera...</p></div></div><div id="cameraError" class="alert alert-error hidden"></div><div class="camera-controls"><span class="capture-live"><i></i> CAMERA LIVE</span><button class="btn btn-primary" id="takePhotoBtn" type="button">● &nbsp; Capture photo</button><button class="btn btn-secondary" type="button" data-close-camera>Cancel</button></div><canvas id="captureCanvas" class="hidden"></canvas></div></div>
+  <div id="cameraModal" class="modal hidden idcam-modal" role="dialog" aria-modal="true" aria-labelledby="cameraTitle">
+    <div class="modal-backdrop" data-close-camera></div>
+    <section class="modal-card camera-modal-card idcam-shell">
+      <header class="idcam-topbar">
+        <div class="idcam-brand"><span class="idcam-brand-mark">F<span>.</span></span><div><strong>FindIT Campus</strong><small>Secure student verification</small></div></div>
+        <div class="idcam-step"><span class="idcam-live-pulse"></span><span id="cameraStepLabel">DOCUMENT CAPTURE</span></div>
+        <button class="idcam-close" type="button" data-close-camera aria-label="Close camera">×</button>
+      </header>
+      <div class="idcam-heading">
+        <div class="idcam-kicker" id="cameraEyebrow">STEP 01 · SCHOOL ID</div>
+        <h2 id="cameraTitle">Capture your school ID</h2>
+        <p id="cameraInstruction">Fit the whole ID inside the frame. Keep all four corners visible.</p>
+      </div>
+      <div id="cameraLiveView" class="idcam-live-view">
+        <div id="cameraFrame" class="camera-frame idcam-stage id-capture-mode">
+          <video id="cameraVideo" autoplay playsinline muted></video>
+          <div id="idViewfinder" class="idcam-viewfinder idcam-id-guide" aria-label="School ID frame"><span class="idcam-corner corner-tl"></span><span class="idcam-corner corner-tr"></span><span class="idcam-corner corner-bl"></span><span class="idcam-corner corner-br"></span><span class="idcam-guide-label">ALIGN SCHOOL ID</span></div>
+          <div id="faceViewfinder" class="idcam-viewfinder idcam-face-guide hidden" aria-label="Face positioning guide"><span class="idcam-eye-line"></span><span class="idcam-guide-label">CENTER YOUR FACE</span></div>
+          <div id="cameraLoading" class="camera-loading hidden"><span class="spinner"></span><p>Opening camera…</p></div>
+        </div>
+        <div id="cameraError" class="alert alert-error hidden"></div>
+        <div class="idcam-helper-row"><span class="idcam-status"><i></i><span id="cameraStatusText">CAMERA READY</span></span><p id="cameraHelper">Avoid glare. Hold the card steady.</p></div>
+        <div class="idcam-controls">
+          <button class="idcam-tool-btn" id="cameraSwitchBtn" type="button"><span class="idcam-tool-icon">⇄</span><span id="cameraSwitchLabel">Switch camera</span></button>
+          <button class="idcam-tool-btn" id="flashBtn" type="button"><span class="idcam-tool-icon">ϟ</span><span id="flashLabel">Flash unavailable</span></button>
+          <button class="idcam-capture-btn" id="takePhotoBtn" type="button" disabled><span class="idcam-capture-ring"><i></i></span><span>Capture photo</span></button>
+          <button class="idcam-cancel-btn" type="button" data-close-camera>Cancel</button>
+        </div>
+        <p class="idcam-privacy-note"><span>⌑</span> The camera image is captured only when you press Capture. Use only information you are authorized to submit.</p>
+      </div>
+      <div id="cameraReviewView" class="idcam-review-view hidden">
+        <div class="idcam-review-status"><span class="idcam-check">✓</span><div><strong id="cameraReviewTitle">Review your school ID</strong><p id="cameraReviewText">Make sure the photo is clear and centered before using it.</p></div></div>
+        <div id="cameraReviewFrame" class="idcam-review-frame id-review-frame"><img id="cameraReviewImage" alt="Captured photo preview"></div>
+        <div class="idcam-review-actions"><button id="retakeCapturedBtn" class="idcam-cancel-btn" type="button">Retake</button><button id="useCapturedBtn" class="idcam-capture-btn" type="button"><span class="idcam-capture-ring"><i></i></span><span>Use Photo</span></button></div>
+        <p class="idcam-privacy-note"><span>✓</span> Check the saved image. The saved photo is cropped from the exact viewfinder area shown in the live preview.</p>
+      </div>
+      <canvas id="captureCanvas" class="hidden"></canvas>
+    </section>
+  </div>
 
   <div id="applicationModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="applicationModalTitle"><div class="modal-backdrop" data-close-application></div><div class="modal-card application-modal-card"><button class="modal-close" type="button" data-close-application aria-label="Close details">×</button><div id="applicationModalBody"></div></div></div>
   <div id="toastHost" class="toast-host" aria-live="polite"></div>

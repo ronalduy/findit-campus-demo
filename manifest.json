@@ -1,16 +1,26 @@
 {
   "id": "./index.html",
-  "name": "FindIT Campus — School Lost & Found",
+  "name": "FindIT Campus \u2014 School Lost & Found",
   "short_name": "FindIT Campus",
   "description": "School lost and found with student ID verification and Admin/Teacher approval demo.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "orientation": "landscape",
-  "background_color": "#f5f8fc",
-  "theme_color": "#0a1b35",
+  "orientation": "portrait",
+  "background_color": "#060b13",
+  "theme_color": "#060b13",
   "icons": [
-    {"src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable"},
-    {"src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
   ]
 }

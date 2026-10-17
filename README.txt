@@ -1,21 +1,28 @@
-FINDIT CAMPUS — CAMERA CANVAS ALIGNMENT UPDATE
+FINDIT CAMPUS — FINTECH-STYLE CAMERA FLOW DEMO
 
-Purpose
-- Keep the page in portrait; no screen orientation lock is requested.
-- ID camera frame stays landscape while the page stays portrait.
-- Selfie frame stays portrait with the oval face guide.
-- The camera preview is now drawn into a canvas using a centered crop that matches the frame's aspect ratio.
-- The exact preview canvas is what is saved as the ID/selfie image. This removes the separate CSS-video-versus-canvas crop mismatch that caused saved images to shift.
-- The front-camera selfie preview and saved selfie are mirrored consistently.
+WHAT IS INCLUDED
+- Existing FindIT Campus student/admin demo and registration workflow.
+- Dark fintech-inspired full-viewport camera flow.
+- Landscape school-ID viewfinder with pulsing corner guides.
+- Portrait oval selfie guide.
+- Rear/front camera switch.
+- Flash/torch toggle when the browser and device support it.
+- Capture review screen with Retake and Use Photo.
+- Accurate crop mapping from the viewfinder CSS rectangle back to raw camera pixels, including the centering offsets created by object-fit: cover.
+- The saved photo is cropped to the same viewfinder area shown live. Selfie preview/save mirroring is handled consistently.
 
-Upload to GitHub Pages
-1. Extract this folder.
-2. In the repository's main/root folder, upload and replace index.html, styles.css, app.js, sw.js, and manifest.json if included.
-3. Keep the existing icons folder.
-4. Commit changes to main and wait for Pages deployment.
-5. On the phone, open the website in Chrome/Safari directly (not Messenger's in-app browser), close old tabs, and reload.
+HOW TO TEST
+1. Open this folder in VS Code and run it through Live Server, or upload the files to GitHub Pages.
+2. On phones, open the HTTPS website directly in Chrome or Safari, not in an embedded Messenger browser.
+3. Allow camera permission. Capture an ID, inspect the review image, then choose Retake or Use Photo. Repeat for the selfie.
+4. On Use Photo, the ID is saved to the registration form and OCR starts automatically.
+5. Use sample IDs for testing. This is a browser-storage demo, not production identity verification.
 
-Important
-- This is still an HTML/JavaScript demo with browser-local storage, not the final PHP/MySQL system.
-- OCR may still misread unclear or small text; keep fields editable and verify manually.
-- Do not use real student ID/selfie data in a public test site.
+IMPORTANT LIMITS
+- Browser camera capture requires HTTPS or localhost.
+- Flash control only works if the camera track exposes the torch capability.
+- Flash/camera controls vary by phone and browser.
+- OCR needs an internet connection to load the Tesseract library.
+- This demo stores records in the current browser; it does not synchronize with other devices.
+- Capturing a selfie is not liveness detection, face matching, or proof of identity. Admin/Teacher must verify student details manually.
+- Do not submit real school ID images or student records on a public demo.

@@ -146,7 +146,16 @@
     showDashboard(); showToast(`Welcome, ${applicant.fullName.split(' ')[0]}!`);
   });
 
-  // Registration reset and camera capture
+  // Fintech-style camera flow. The page itself is never rotated or locked.
+  // Capture math maps the visible viewfinder rectangle through object-fit: cover
+  // into the original video pixels, so the saved image matches the on-screen guide.
+  let activeFacingMode = 'environment';
+  let flashIsOn = false;
+  let flashSupported = false;
+  let pendingReviewType = null;
+  let pendingReviewPhoto = null;
+  let currentReviewFacing = 'environment';
+
   function resetRegistration() {
     ocrSequence += 1; lastOcrAutofill = { studentNumber: '', fullName: '', program: '' };
     $('registerForm').reset(); photoIdData = null; photoSelfieData = null; setPhotoStage('id', null); setPhotoStage('selfie', null); $('retakeIdBtn').disabled = true; $('retakeSelfieBtn').disabled = true; hideAlert('registerAlert'); $('ocrStatus').classList.add('hidden'); $('ocrStatus').textContent = ''; $('ocrStatus').style.background = ''; $('ocrStatus').style.color = '';
@@ -163,347 +172,244 @@
       if (type === 'id') $('retakeIdBtn').disabled = true; else $('retakeSelfieBtn').disabled = true;
     }
   }
-  // The page stays in its normal orientation. Only the ID camera frame is landscape.
-  function isLandscapeIdFrameReady(video = $('cameraVideo')) {
-    return Boolean(video && video.videoWidth > 0 && video.videoHeight > 0);
-  }
 
-  function clearVideoPresentation(video = $('cameraVideo')) {
-    ['position','width','height','max-width','max-height','left','top','right','bottom','inset','transform','transform-origin','object-fit','object-position','z-index','opacity','pointer-events'].forEach(prop => video.style.removeProperty(prop));
-    delete video.dataset.finditRotate;
+  function getCameraConstraints(type, facingMode) {
+    return {
+      audio: false,
+      video: {
+        facingMode: { ideal: facingMode || (type === 'id' ? 'environment' : 'user') },
+        width: { ideal: 1920 },
+        height: { ideal: 1080 },
+        frameRate: { ideal: 30, max: 30 }
+      }
+    };
   }
-
-  // The page remains portrait. We render a landscape crop for the ID and a portrait
-  // crop for the selfie into a canvas. The same canvas is shown live and saved, so
-  // the captured image cannot shift relative to the visible guide.
-  function syncVideoPresentation(type = cameraType) {
+  function waitForVideoDimensions(video) {
+    if (video.videoWidth && video.videoHeight) return Promise.resolve();
+    return new Promise(resolve => {
+      let done = false;
+      const finish = () => { if (done) return; done = true; video.removeEventListener('loadedmetadata', finish); resolve(); };
+      video.addEventListener('loadedmetadata', finish, { once: true });
+      setTimeout(finish, 2200);
+    });
+  }
+  function setCameraUI(type) {
+    const idMode = type === 'id';
+    $('cameraTitle').textContent = idMode ? 'Capture your school ID' : 'Take your live selfie';
+    $('cameraEyebrow').textContent = idMode ? 'STEP 01 · SCHOOL ID' : 'STEP 02 · LIVE SELFIE';
+    $('cameraStepLabel').textContent = idMode ? 'DOCUMENT CAPTURE' : 'FACE CAPTURE';
+    $('cameraInstruction').textContent = idMode
+      ? 'Fit the whole ID inside the frame. Keep all four corners visible.'
+      : 'Center your face inside the oval. Look toward the camera and use even lighting.';
+    $('cameraHelper').textContent = idMode ? 'Avoid glare. Hold the card steady.' : 'Remove strong backlight and keep your face uncovered.';
+    $('cameraStatusText').textContent = 'CAMERA LIVE';
+    $('cameraFrame').classList.toggle('id-capture-mode', idMode);
+    $('cameraFrame').classList.toggle('selfie-capture-mode', !idMode);
+    $('idViewfinder').classList.toggle('hidden', !idMode);
+    $('faceViewfinder').classList.toggle('hidden', idMode);
+    $('cameraSwitchLabel').textContent = activeFacingMode === 'environment' ? 'Back camera' : 'Front camera';
+    $('flashLabel').textContent = flashSupported ? (flashIsOn ? 'Flash on' : 'Flash off') : 'Flash unsupported';
+    $('flashBtn').disabled = !flashSupported;
+    $('flashBtn').classList.toggle('is-on', flashSupported && flashIsOn);
+  }
+  function stopCamera() {
+    if (cameraStream) cameraStream.getTracks().forEach(track => { try { track.stop(); } catch (_) {} });
+    cameraStream = null;
     const video = $('cameraVideo');
-    const frame = $('cameraFrame');
-    const preview = $('cameraPreviewCanvas');
-    if (!video || !frame || !preview) return;
-
-    video.style.setProperty('position', 'absolute', 'important');
-    video.style.setProperty('inset', '0', 'important');
-    video.style.setProperty('width', '100%', 'important');
-    video.style.setProperty('height', '100%', 'important');
-    video.style.setProperty('max-width', 'none', 'important');
-    video.style.setProperty('max-height', 'none', 'important');
-    video.style.setProperty('opacity', '0', 'important');
-    video.style.setProperty('pointer-events', 'none', 'important');
-    video.style.setProperty('z-index', '0', 'important');
-
-    preview.style.position = 'absolute';
-    preview.style.inset = '0';
-    preview.style.width = '100%';
-    preview.style.height = '100%';
-    preview.style.display = 'block';
-    preview.style.zIndex = '1';
-    preview.style.pointerEvents = 'none';
+    if (video) { video.pause(); video.srcObject = null; video.classList.remove('idcam-mirrored'); }
+    flashIsOn = false;
+    flashSupported = false;
   }
-
-  function getCenteredCoverCrop(sourceWidth, sourceHeight, targetAspect) {
-    let sx = 0, sy = 0, sw = sourceWidth, sh = sourceHeight;
-    const sourceAspect = sourceWidth / sourceHeight;
-    if (sourceAspect > targetAspect) {
-      sw = sourceHeight * targetAspect;
-      sx = (sourceWidth - sw) / 2;
-    } else if (sourceAspect < targetAspect) {
-      sh = sourceWidth / targetAspect;
-      sy = (sourceHeight - sh) / 2;
+  function closeCamera() {
+    stopCamera();
+    $('cameraModal').classList.add('hidden');
+    $('cameraLiveView').classList.remove('hidden');
+    $('cameraReviewView').classList.add('hidden');
+    $('cameraReviewImage').removeAttribute('src');
+    pendingReviewType = null;
+    pendingReviewPhoto = null;
+  }
+  async function startCamera(type, facingMode) {
+    stopCamera();
+    cameraType = type;
+    activeFacingMode = facingMode || (type === 'id' ? 'environment' : 'user');
+    pendingReviewType = null;
+    pendingReviewPhoto = null;
+    $('cameraLiveView').classList.remove('hidden');
+    $('cameraReviewView').classList.add('hidden');
+    $('cameraReviewImage').removeAttribute('src');
+    setCameraUI(type);
+    $('cameraError').classList.add('hidden');
+    $('cameraLoading').classList.remove('hidden');
+    $('takePhotoBtn').disabled = true;
+    $('cameraModal').classList.remove('hidden');
+    if (!navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== 'function') {
+      $('cameraLoading').classList.add('hidden');
+      $('cameraError').textContent = 'This browser cannot access the camera. Open the site in Chrome or Safari using its HTTPS address.';
+      $('cameraError').classList.remove('hidden');
+      return;
     }
+    try {
+      cameraStream = await navigator.mediaDevices.getUserMedia(getCameraConstraints(type, activeFacingMode));
+      const video = $('cameraVideo');
+      video.srcObject = cameraStream;
+      video.classList.toggle('idcam-mirrored', type === 'selfie' && activeFacingMode === 'user');
+      await video.play();
+      await waitForVideoDimensions(video);
+      if (!video.videoWidth || !video.videoHeight) throw new Error('The camera did not return an image. Please close and reopen the camera.');
+      const track = cameraStream.getVideoTracks()[0];
+      let capabilities = {};
+      try { capabilities = track && track.getCapabilities ? track.getCapabilities() : {}; } catch (_) {}
+      flashSupported = Boolean(capabilities && capabilities.torch);
+      flashIsOn = false;
+      $('cameraLoading').classList.add('hidden');
+      $('takePhotoBtn').disabled = false;
+      setCameraUI(type);
+    } catch (err) {
+      $('cameraLoading').classList.add('hidden');
+      $('cameraError').textContent = err.name === 'NotAllowedError'
+        ? 'Camera permission was blocked. Allow camera access in your browser settings and try again.'
+        : (err.name === 'NotFoundError' ? 'No camera was found on this device.' : `Camera could not open: ${err.message || 'Please open this site in Chrome or Safari.'}`);
+      $('cameraError').classList.remove('hidden');
+      $('takePhotoBtn').disabled = true;
+    }
+  }
+  document.querySelectorAll('[data-camera]').forEach(button => button.addEventListener('click', () => startCamera(button.dataset.camera)));
+  document.querySelectorAll('[data-close-camera]').forEach(button => button.addEventListener('click', closeCamera));
+  $('retakeIdBtn').addEventListener('click', () => startCamera('id'));
+  $('retakeSelfieBtn').addEventListener('click', () => startCamera('selfie'));
+
+  $('cameraSwitchBtn').addEventListener('click', async () => {
+    if (!cameraType) return;
+    const nextFacing = activeFacingMode === 'environment' ? 'user' : 'environment';
+    await startCamera(cameraType, nextFacing);
+  });
+  $('flashBtn').addEventListener('click', async () => {
+    if (!flashSupported || !cameraStream) return;
+    const track = cameraStream.getVideoTracks()[0];
+    const requested = !flashIsOn;
+    try {
+      await track.applyConstraints({ advanced: [{ torch: requested }] });
+      flashIsOn = requested;
+      $('flashLabel').textContent = flashIsOn ? 'Flash on' : 'Flash off';
+      $('flashBtn').classList.toggle('is-on', flashIsOn);
+      showToast(flashIsOn ? 'Camera light enabled.' : 'Camera light disabled.');
+    } catch (err) {
+      flashSupported = false;
+      $('flashBtn').disabled = true;
+      $('flashLabel').textContent = 'Flash unsupported';
+      showToast('This phone or browser does not allow flashlight control. You can still use the camera.', 'warning');
+    }
+  });
+
+  function clampCrop(sx, sy, sw, sh, sourceWidth, sourceHeight) {
     sx = Math.max(0, Math.min(sourceWidth - 1, sx));
     sy = Math.max(0, Math.min(sourceHeight - 1, sy));
     sw = Math.max(1, Math.min(sourceWidth - sx, sw));
     sh = Math.max(1, Math.min(sourceHeight - sy, sh));
     return { sx, sy, sw, sh };
   }
+  function getViewfinderCrop(video, guide) {
+    const vw = video.videoWidth, vh = video.videoHeight;
+    if (!vw || !vh) throw new Error('Camera frame is not ready. Please reopen the camera.');
+    const videoRect = video.getBoundingClientRect();
+    const guideRect = guide.getBoundingClientRect();
+    if (!videoRect.width || !videoRect.height || !guideRect.width || !guideRect.height) throw new Error('Viewfinder is not ready. Please wait a moment and capture again.');
 
-  function drawCameraPreviewFrame() {
+    // Exact object-fit: cover mapping: scale raw video pixels to the video's CSS box,
+    // then map the guide rectangle back into source pixels using the cover offsets.
+    const scale = Math.max(videoRect.width / vw, videoRect.height / vh);
+    const renderedWidth = vw * scale;
+    const renderedHeight = vh * scale;
+    const offsetX = (renderedWidth - videoRect.width) / 2;
+    const offsetY = (renderedHeight - videoRect.height) / 2;
+    const guideLeft = guideRect.left - videoRect.left;
+    const guideTop = guideRect.top - videoRect.top;
+    let sx = (guideLeft + offsetX) / scale;
+    let sy = (guideTop + offsetY) / scale;
+    let sw = guideRect.width / scale;
+    let sh = guideRect.height / scale;
+
+    const mirrored = video.classList.contains('idcam-mirrored');
+    if (mirrored) sx = vw - sx - sw;
+    return clampCrop(sx, sy, sw, sh, vw, vh);
+  }
+  function captureViewfinderPhoto(type) {
     const video = $('cameraVideo');
-    const frame = $('cameraFrame');
-    const preview = $('cameraPreviewCanvas');
-    if (!video || !frame || !preview || !cameraType || video.readyState < 2 || !video.videoWidth || !video.videoHeight) return false;
-    const rect = frame.getBoundingClientRect();
-    if (!rect.width || !rect.height) return false;
-
-    // Use the frame's actual on-screen aspect ratio (ID landscape, selfie portrait).
-    const targetAspect = rect.width / rect.height;
-    const crop = getCenteredCoverCrop(video.videoWidth, video.videoHeight, targetAspect);
-    const targetWidth = Math.max(1, Math.round(crop.sw));
-    const targetHeight = Math.max(1, Math.round(targetWidth / targetAspect));
-    if (preview.width !== targetWidth) preview.width = targetWidth;
-    if (preview.height !== targetHeight) preview.height = targetHeight;
-
-    const context = preview.getContext('2d', { alpha: false });
-    if (!context) return false;
-    context.setTransform(1, 0, 0, 1, 0, 0);
-    context.clearRect(0, 0, preview.width, preview.height);
-    context.imageSmoothingEnabled = true;
-    context.imageSmoothingQuality = 'high';
-
-    // Selfie preview mirrors the front camera in the usual way; the saved selfie
-    // is rendered by this same canvas, so it keeps the same centering/mirroring.
-    if (cameraType === 'selfie') {
-      context.translate(preview.width, 0);
-      context.scale(-1, 1);
-    }
-    context.drawImage(video, crop.sx, crop.sy, crop.sw, crop.sh, 0, 0, preview.width, preview.height);
-    return true;
-  }
-
-  function stopPreviewRenderer() {
-    if (previewAnimationFrame) cancelAnimationFrame(previewAnimationFrame);
-    previewAnimationFrame = 0;
-  }
-
-  function startPreviewRenderer() {
-    stopPreviewRenderer();
-    const render = () => {
-      if (!cameraStream || !cameraType || $('cameraModal').classList.contains('hidden')) {
-        previewAnimationFrame = 0;
-        return;
-      }
-      drawCameraPreviewFrame();
-      previewAnimationFrame = requestAnimationFrame(render);
-    };
-    previewAnimationFrame = requestAnimationFrame(render);
-  }
-  function syncIdLandscapeGuard() {
-    // No phone rotation is required. Keep the page portrait and allow capture as soon
-    // as the browser has a valid camera frame.
-    $('cameraOrientationNotice').classList.add('hidden');
-    const video = $('cameraVideo');
-    $('takePhotoBtn').disabled = !(video.videoWidth > 0 && video.videoHeight > 0);
-  }
-  function getCameraConstraints(type) {
-    // Do not lock device orientation or ask the browser to rotate the camera stream.
-    // CSS keeps the ID preview landscape and crops the centered visible portion.
-    return {
-      audio: false,
-      video: {
-        facingMode: { ideal: type === 'id' ? 'environment' : 'user' },
-        width: { ideal: 1920 },
-        height: { ideal: 1080 }
-      }
-    };
-  }
-  async function waitForVideoDimensions(video) {
-    if (video.videoWidth && video.videoHeight) return;
-    await new Promise(resolve => {
-      let done = false;
-      const finish = () => { if (done) return; done = true; video.removeEventListener('loadedmetadata', finish); resolve(); };
-      video.addEventListener('loadedmetadata', finish, { once: true });
-      setTimeout(finish, 1800);
-    });
-  }
-  async function startCamera(type) {
-    // Open the camera inside the normal page modal. The page itself never rotates
-    // or enters fullscreen; only the ID preview/frame uses a landscape aspect ratio.
-    closeCamera();
-    cameraType = type;
-    const modal = $('cameraModal');
-    const card = modal.querySelector('.camera-modal-card');
-    const video = $('cameraVideo');
-
-    $('cameraTitle').textContent = type === 'id' ? 'Capture your school ID' : 'Take your live selfie';
-    $('cameraInstruction').textContent = type === 'id'
-      ? 'Keep your phone upright. Hold the school ID horizontally and centered inside the wide frame.'
-      : 'Keep your phone upright and center your face inside the oval guide. Use even lighting.';
-    $('cameraOrientationNotice').classList.add('hidden');
-    const frame = $('cameraFrame');
-    frame.classList.toggle('id-capture-mode', type === 'id');
-    frame.classList.toggle('selfie-capture-mode', type === 'selfie');
-    $('cameraFrameOverlay').classList.toggle('id-capture-overlay', type === 'id');
-    card.classList.toggle('face-camera-card', type === 'selfie');
-    clearVideoPresentation(video);
-    $('cameraError').classList.add('hidden');
-    $('cameraLoading').classList.remove('hidden');
-    $('takePhotoBtn').disabled = true;
-    modal.classList.remove('hidden');
-
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      $('cameraLoading').classList.add('hidden');
-      $('cameraError').textContent = 'This browser cannot access a camera here. Open FindIT Campus directly in Chrome or Safari using its HTTPS link.';
-      $('cameraError').classList.remove('hidden');
-      return;
-    }
-
-    try {
-      cameraStream = await navigator.mediaDevices.getUserMedia(getCameraConstraints(type));
-      video.srcObject = cameraStream;
-      await video.play();
-      await waitForVideoDimensions(video);
-      // Let the portrait modal and landscape ID frame finish layout before capture.
-      await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-      syncVideoPresentation(type);
-      drawCameraPreviewFrame();
-      startPreviewRenderer();
-      $('cameraLoading').classList.add('hidden');
-      if (type === 'id') syncIdLandscapeGuard();
-      else $('takePhotoBtn').disabled = !(video.videoWidth > 0 && video.videoHeight > 0);
-    } catch (err) {
-      $('cameraLoading').classList.add('hidden');
-      $('cameraError').textContent = err.name === 'NotAllowedError'
-        ? 'Camera permission was blocked. Allow camera access in the browser settings, then try again.'
-        : 'Camera could not open. If this page is inside Messenger, open it in Chrome and try again.';
-      $('cameraError').classList.remove('hidden');
-    }
-  }
-  function stopCamera() {
-    stopPreviewRenderer();
-    if (cameraStream) cameraStream.getTracks().forEach(track => track.stop());
-    cameraStream = null;
-    $('cameraVideo').srcObject = null;
-  }
-  function closeCamera() {
-    const modal = $('cameraModal');
-    stopCamera();
-    modal.classList.add('hidden');
-    const card = modal.querySelector('.camera-modal-card');
-    card.classList.remove('face-camera-card');
-    cameraType = null;
-    clearVideoPresentation($('cameraVideo'));
-  }
-  document.querySelectorAll('[data-camera]').forEach(button => button.addEventListener('click', () => startCamera(button.dataset.camera)));
-  document.querySelectorAll('[data-close-camera]').forEach(button => button.addEventListener('click', closeCamera));
-  $('retakeIdBtn').addEventListener('click', () => startCamera('id'));
-  $('retakeSelfieBtn').addEventListener('click', () => startCamera('selfie'));
-  let orientationRefreshTimer = null;
-  async function refreshCameraForOrientation() {
-    if (!cameraType || !cameraStream) return;
-    if (orientationRefreshTimer) clearTimeout(orientationRefreshTimer);
-    orientationRefreshTimer = setTimeout(() => {
-      orientationRefreshTimer = null;
-      if (!cameraType || !cameraStream) return;
-      syncVideoPresentation(cameraType);
-      drawCameraPreviewFrame();
-      if (cameraType === 'id') syncIdLandscapeGuard();
-      else $('takePhotoBtn').disabled = !$('cameraVideo').videoWidth;
-    }, 180);
-  }
-  window.addEventListener('orientationchange', refreshCameraForOrientation);
-  window.addEventListener('resize', refreshCameraForOrientation);
-  $('cameraVideo').addEventListener('resize', refreshCameraForOrientation);
-
-  // Do not rotate the source pixels. The browser page stays upright, and the CSS
-  // preview uses object-fit: cover within the frame. The save routine below makes
-  // the same centered crop based on the frame's measured aspect ratio.
-  function getOrientedVideoSource(video) {
-    const sourceWidth = video.videoWidth;
-    const sourceHeight = video.videoHeight;
-    if (!sourceWidth || !sourceHeight) throw new Error('The camera frame is not ready. Please reopen the camera and try again.');
-    return { source: video, width: sourceWidth, height: sourceHeight };
-  }
-
-  // Save the centered crop matching the visible video frame aspect ratio. Because
-  // the video is not rotated, this same crop is used for both the ID and selfie.
-  function captureVideoView(video, targetElement, outputCanvas, maxDimension = 2400, quality = 0.94) {
-    const oriented = getOrientedVideoSource(video);
-    const rect = targetElement.getBoundingClientRect();
-    if (!rect.width || !rect.height) throw new Error('The camera frame is not ready. Please reopen the camera and try again.');
-    const sourceWidth = oriented.width;
-    const sourceHeight = oriented.height;
-    const targetAspect = rect.width / rect.height;
-    let sx = 0, sy = 0, sw = sourceWidth, sh = sourceHeight;
-    const sourceAspect = sourceWidth / sourceHeight;
-
-    // CSS object-fit: cover removes the centered excess from the source.
-    if (sourceAspect > targetAspect) {
-      sw = sourceHeight * targetAspect;
-      sx = (sourceWidth - sw) / 2;
-    } else if (sourceAspect < targetAspect) {
-      sh = sourceWidth / targetAspect;
-      sy = (sourceHeight - sh) / 2;
-    }
-    sx = Math.max(0, Math.min(sourceWidth - 1, sx));
-    sy = Math.max(0, Math.min(sourceHeight - 1, sy));
-    sw = Math.max(1, Math.min(sourceWidth - sx, sw));
-    sh = Math.max(1, Math.min(sourceHeight - sy, sh));
-
-    const scale = Math.min(1, maxDimension / Math.max(sw, sh));
-    outputCanvas.width = Math.max(1, Math.round(sw * scale));
-    outputCanvas.height = Math.max(1, Math.round(sh * scale));
-    const outputContext = outputCanvas.getContext('2d', { willReadFrequently: true });
-    outputContext.clearRect(0, 0, outputCanvas.width, outputCanvas.height);
-    outputContext.imageSmoothingEnabled = true;
-    outputContext.imageSmoothingQuality = 'high';
-    outputContext.drawImage(oriented.source, sx, sy, sw, sh, 0, 0, outputCanvas.width, outputCanvas.height);
-    return outputCanvas.toDataURL('image/jpeg', quality);
-  }
-
-  // Keep a smaller full camera frame only as an OCR fallback. Never use it for the
-  // saved preview, because its aspect ratio may differ from the live camera window.
-  function captureFullSourceForOcr(video, maxDimension = 1800) {
-    const oriented = getOrientedVideoSource(video);
-    const scale = Math.min(1, maxDimension / Math.max(oriented.width, oriented.height));
-    const fullCanvas = document.createElement('canvas');
-    fullCanvas.width = Math.max(1, Math.round(oriented.width * scale));
-    fullCanvas.height = Math.max(1, Math.round(oriented.height * scale));
-    const fullContext = fullCanvas.getContext('2d');
-    fullContext.imageSmoothingEnabled = true;
-    fullContext.imageSmoothingQuality = 'high';
-    fullContext.drawImage(oriented.source, 0, 0, fullCanvas.width, fullCanvas.height);
-    return fullCanvas.toDataURL('image/jpeg', 0.88);
-  }
-
-  $('takePhotoBtn').addEventListener('click', async () => {
-    const video = $('cameraVideo'); if (!video.videoWidth || !cameraType) return;
-    const type = cameraType;
-    if (type === 'id' && !isLandscapeIdFrameReady(video)) {
-      syncIdLandscapeGuard();
-      showToast('The camera is still opening. Please wait a moment and try again.', 'warning');
-      return;
-    }
+    const guide = $(type === 'id' ? 'idViewfinder' : 'faceViewfinder');
+    if (!video.videoWidth || video.readyState < 2) throw new Error('The camera is still focusing. Wait a moment and try again.');
+    const crop = getViewfinderCrop(video, guide);
+    const maxDimension = type === 'id' ? 2600 : 1800;
+    const factor = Math.min(1, maxDimension / Math.max(crop.sw, crop.sh));
     const canvas = $('captureCanvas');
-    const ctx = canvas.getContext('2d', { willReadFrequently: true });
-    let ocrSources = [];
-
-    if (type === 'id') {
-      let displayedPhoto;
-      let fullSourceForOcr = '';
-      try {
-        // Refresh one frame, then save the same canvas shown live inside the landscape guide.
-        if (!drawCameraPreviewFrame()) throw new Error('The camera preview is not ready yet. Please wait and try again.');
-        displayedPhoto = $('cameraPreviewCanvas').toDataURL('image/jpeg', 0.95);
-        // The wider image is a secondary OCR fallback only, never the saved preview.
-        try { fullSourceForOcr = captureFullSourceForOcr(video); } catch (ocrFrameError) {
-          console.warn('The wider OCR fallback could not be created.', ocrFrameError);
-        }
-      } catch (captureError) {
-        console.error('School ID capture failed:', captureError);
-        showToast(captureError.message || 'Could not capture the camera view. Please try again.', 'error');
-        return;
-      }
-
-      const ocrSources = [displayedPhoto];
-      if (fullSourceForOcr) ocrSources.push(fullSourceForOcr);
-      let savedPhoto = displayedPhoto;
-      try { savedPhoto = await compressDataUrl(displayedPhoto, 1800, 0.91); } catch (_) {}
-
-      closeCamera();
-      setPhotoStage(type, savedPhoto);
-      showToast('Saved the same centered landscape view shown in the camera. Reading the ID automatically…', 'success');
-      runIdOcr(ocrSources);
-      return;
+    canvas.width = Math.max(1, Math.round(crop.sw * factor));
+    canvas.height = Math.max(1, Math.round(crop.sh * factor));
+    const ctx = canvas.getContext('2d', { alpha: false, willReadFrequently: type === 'id' });
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.fillStyle = '#060b13';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    if (video.classList.contains('idcam-mirrored')) {
+      // Mirror the saved selfie exactly as it was shown in the live front-camera preview.
+      ctx.translate(canvas.width, 0);
+      ctx.scale(-1, 1);
     }
-
-    // Save the same centered camera view shown behind the oval guide. This avoids
-    // the old behavior where the preview was portrait-cropped but the saved selfie
-    // used the entire raw camera frame and the face looked off-center/smaller.
-    let selfieData;
+    ctx.drawImage(video, crop.sx, crop.sy, crop.sw, crop.sh, 0, 0, canvas.width, canvas.height);
+    return canvas.toDataURL('image/jpeg', type === 'id' ? 0.96 : 0.92);
+  }
+  function showReview(type, photo) {
+    pendingReviewType = type;
+    pendingReviewPhoto = photo;
+    currentReviewFacing = activeFacingMode;
+    stopCamera();
+    $('cameraLiveView').classList.add('hidden');
+    $('cameraReviewView').classList.remove('hidden');
+    $('cameraReviewTitle').textContent = type === 'id' ? 'Review your school ID' : 'Review your selfie';
+    $('cameraReviewText').textContent = type === 'id'
+      ? 'Check that the ID number, name, and program are sharp before continuing.'
+      : 'Make sure your face is centered and clearly visible.';
+    $('cameraReviewImage').src = photo;
+    $('cameraReviewFrame').classList.toggle('id-review-frame', type === 'id');
+    $('cameraReviewFrame').classList.toggle('selfie-review-frame', type === 'selfie');
+  }
+  $('takePhotoBtn').addEventListener('click', () => {
+    if (!cameraType) return;
     try {
-      if (!drawCameraPreviewFrame()) throw new Error('The selfie preview is not ready yet. Please wait and try again.');
-      selfieData = $('cameraPreviewCanvas').toDataURL('image/jpeg', 0.90);
-      try { selfieData = await compressDataUrl(selfieData, 1400, 0.84); } catch (_) {}
-    } catch (captureError) {
-      console.error('Selfie capture failed:', captureError);
-      showToast(captureError.message || 'Could not capture the selfie. Please try again.', 'error');
-      return;
+      const photo = captureViewfinderPhoto(cameraType);
+      showReview(cameraType, photo);
+    } catch (err) {
+      showToast(err.message || 'Could not capture the viewfinder. Please try again.', 'error');
     }
-    closeCamera();
-    setPhotoStage(type, selfieData);
-    showToast('Saved the same centered selfie view shown in the camera. It will be shown to the Admin/Teacher for manual review.');
   });
+  $('retakeCapturedBtn').addEventListener('click', () => {
+    const type = pendingReviewType || cameraType || 'id';
+    const facing = currentReviewFacing || (type === 'id' ? 'environment' : 'user');
+    startCamera(type, facing);
+  });
+  $('useCapturedBtn').addEventListener('click', async () => {
+    if (!pendingReviewType || !pendingReviewPhoto) return;
+    const type = pendingReviewType;
+    let photo = pendingReviewPhoto;
+    try { photo = await compressDataUrl(photo, type === 'id' ? 2000 : 1400, type === 'id' ? 0.94 : 0.88); } catch (_) {}
+    closeCamera();
+    setPhotoStage(type, photo);
+    if (type === 'id') {
+      showToast('School ID photo saved. Reading the captured ID automatically…', 'success');
+      runIdOcr([photo]);
+    } else {
+      showToast('Selfie saved. The Admin/Teacher will review it with your school ID.');
+    }
+  });
+
+  window.addEventListener('orientationchange', () => {
+    // We do not rotate or lock the page; the browser lays out the viewfinder inside it.
+    if (cameraType && cameraStream) setCameraUI(cameraType);
+  });
+  window.addEventListener('resize', () => {
+    if (cameraType && cameraStream) setCameraUI(cameraType);
+  });
+
   document.querySelectorAll('[data-close-application]').forEach(button => button.addEventListener('click', closeApplicationModal));
   document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeCamera(); closeApplicationModal(); } });
 

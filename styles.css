@@ -84,3 +84,127 @@
 .camera-frame .camera-preview-canvas { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; display: block; pointer-events: none; }
 .camera-frame .camera-frame-overlay { z-index: 2; }
 .camera-frame .camera-loading { z-index: 3; }
+
+
+/* Fintech-inspired ID/selfie capture flow. The document page remains portrait. */
+.idcam-modal{padding:0;background:#060b13;color:#eef5ff;z-index:100;align-items:stretch;justify-content:stretch}
+.idcam-modal .modal-backdrop{background:#060b13;backdrop-filter:none}
+.idcam-modal .camera-modal-card.idcam-shell{position:relative;inset:auto;width:100%;height:100vh;height:100dvh;max-height:100vh;max-height:100dvh;margin:0;padding:0;border:0;border-radius:0;background:#060b13;color:#eef5ff;box-shadow:none;overflow:hidden;display:flex;flex-direction:column;animation:fintechIn .18s ease}
+.idcam-topbar{display:flex;align-items:center;gap:16px;padding:calc(14px + env(safe-area-inset-top)) clamp(16px,3vw,34px) 13px;border-bottom:1px solid rgba(158,186,223,.14);background:rgba(8,16,29,.94);flex-shrink:0}
+.idcam-brand{display:flex;align-items:center;gap:10px;min-width:0}
+.idcam-brand-mark{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(135deg,#0052ff,#19a6ff);font:900 24px 'Manrope',sans-serif;color:white;box-shadow:0 0 24px rgba(0,82,255,.24)}
+.idcam-brand-mark span{color:#a9f4ff}
+.idcam-brand>div{display:flex;flex-direction:column;gap:2px}
+.idcam-brand strong{font:800 13px 'Manrope',sans-serif;letter-spacing:-.2px;color:#f3f7ff}
+.idcam-brand small{font-size:10px;color:#8494ac}
+.idcam-step{display:flex;align-items:center;gap:8px;margin-left:auto;margin-right:4px;font-size:9px;font-weight:800;letter-spacing:1.3px;color:#9eb0ca;white-space:nowrap}
+.idcam-live-pulse{width:7px;height:7px;border-radius:50%;background:#36e0b4;box-shadow:0 0 0 4px rgba(54,224,180,.11);animation:livePulse 1.8s infinite}
+.idcam-close{width:39px;height:39px;display:grid;place-items:center;flex-shrink:0;border-radius:12px;border:1px solid rgba(167,193,228,.19);background:rgba(255,255,255,.05);color:#dce7f8;font-size:26px;line-height:1}
+.idcam-close:hover{background:rgba(255,255,255,.12)}
+.idcam-heading{padding:clamp(16px,2.6vh,28px) clamp(16px,4vw,48px) 15px;flex-shrink:0}
+.idcam-kicker{display:flex;align-items:center;gap:7px;color:#5eb8ff;font-size:10px;font-weight:900;letter-spacing:1.6px;text-transform:uppercase}
+.idcam-heading h2{margin:9px 0 6px;color:#f4f8ff;font:800 clamp(23px,3.2vw,34px)/1.16 'Manrope',sans-serif;letter-spacing:-1px}
+.idcam-heading p{margin:0;color:#99a9c0;font-size:clamp(12px,1.5vw,14px);line-height:1.55;max-width:720px}
+.idcam-live-view{display:flex;flex-direction:column;min-height:0;flex:1}
+.idcam-stage{position:relative;width:100%;height:auto;min-height:180px;max-height:none;aspect-ratio:auto;flex:1;display:block;overflow:hidden;background:#02050b;border-radius:0}
+.idcam-stage #cameraVideo{position:absolute!important;inset:0!important;display:block;width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;object-fit:cover!important;object-position:50% 50%!important;opacity:1!important;pointer-events:none!important;z-index:0!important;background:#02050b}
+.idcam-stage #cameraVideo.idcam-mirrored{transform:scaleX(-1)!important}
+.idcam-shade{position:absolute;inset:0;z-index:1;pointer-events:none;background:rgba(0,0,0,0);border:0;border-radius:0;box-shadow:none}
+.idcam-viewfinder{position:absolute;z-index:2;left:50%;top:50%;transform:translate(-50%,-50%);pointer-events:none;background:transparent}
+.idcam-id-guide{width:min(91vw,920px);aspect-ratio:1.586/1;border:1px solid rgba(245,250,255,.9);border-radius:13px;box-shadow:0 0 0 9999px rgba(1,5,13,.72),0 0 0 1px rgba(0,82,255,.2);}
+.idcam-id-guide:after{content:'';position:absolute;inset:-1px;border-radius:13px;box-shadow:0 0 26px rgba(0,82,255,.2);animation:frameGlow 2.4s ease-in-out infinite}
+.idcam-corner{position:absolute;width:25px;height:25px;border-color:#43edc2;border-style:solid;filter:drop-shadow(0 0 7px rgba(67,237,194,.45));animation:cornerGlow 2.3s ease-in-out infinite alternate}
+.corner-tl{left:-2px;top:-2px;border-width:4px 0 0 4px;border-radius:9px 0 0 0}
+.corner-tr{right:-2px;top:-2px;border-width:4px 4px 0 0;border-radius:0 9px 0 0}
+.corner-bl{left:-2px;bottom:-2px;border-width:0 0 4px 4px;border-radius:0 0 0 9px}
+.corner-br{right:-2px;bottom:-2px;border-width:0 4px 4px 0;border-radius:0 0 9px 0}
+.idcam-guide-label{position:absolute;left:50%;bottom:-32px;transform:translateX(-50%);padding:5px 10px;border-radius:99px;background:rgba(6,11,19,.86);border:1px solid rgba(138,170,212,.15);color:#d7e7ff;font-size:9px;font-weight:900;letter-spacing:1.5px;white-space:nowrap}
+.idcam-face-guide{width:min(68vw,310px);height:min(46vh,440px);height:min(48dvh,440px);min-height:220px;border:2px solid rgba(67,237,194,.95);border-radius:48% 48% 45% 45% / 40% 40% 58% 58%;box-shadow:0 0 0 9999px rgba(1,5,13,.72),0 0 30px rgba(0,82,255,.14),inset 0 0 0 1px rgba(255,255,255,.18)}
+.idcam-face-guide:before{content:'';position:absolute;left:50%;top:37%;transform:translateX(-50%);width:58%;height:1px;background:rgba(220,240,255,.68);box-shadow:0 0 9px rgba(67,237,194,.25)}
+.idcam-face-guide .idcam-guide-label{bottom:-35px}
+.idcam-eye-line{display:block}
+.idcam-loading{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:rgba(2,5,11,.88);color:#e9f2ff}
+.idcam-loading .spinner{width:30px;height:30px;border:2px solid rgba(255,255,255,.14);border-top-color:#43edc2}
+.idcam-loading p{margin:0;font-size:12px}
+.idcam-live-view .camera-loading{z-index:5}
+.idcam-live-view .camera-loading:not(.hidden){display:flex}
+.idcam-live-view .camera-loading.hidden{display:none!important}
+.idcam-live-view .alert{margin:10px clamp(16px,4vw,48px) 0}
+.idcam-helper-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px clamp(16px,4vw,48px) 5px;flex-shrink:0}
+.idcam-status{display:inline-flex;align-items:center;gap:8px;color:#51dfb6;font-size:9px;letter-spacing:1.3px;font-weight:900;white-space:nowrap}
+.idcam-status i{width:7px;height:7px;border-radius:50%;background:#43edc2;box-shadow:0 0 0 5px rgba(67,237,194,.11)}
+.idcam-helper-row p{margin:0;color:#7789a3;font-size:11px;text-align:right;line-height:1.45}
+.idcam-controls{display:grid;grid-template-columns:minmax(90px,1fr) minmax(90px,1fr) minmax(150px,1.6fr) minmax(90px,1fr);gap:10px;align-items:center;padding:13px clamp(16px,4vw,48px) calc(15px + env(safe-area-inset-bottom));flex-shrink:0;background:linear-gradient(180deg,rgba(6,11,19,.94),#060b13)}
+.idcam-tool-btn,.idcam-cancel-btn{height:54px;display:flex;align-items:center;justify-content:center;gap:9px;padding:0 15px;border:1px solid rgba(152,180,218,.2);border-radius:14px;background:rgba(255,255,255,.045);color:#c9d8ee;font-size:11px;font-weight:800;transition:background .18s,border-color .18s,transform .18s}
+.idcam-tool-btn:hover,.idcam-cancel-btn:hover{background:rgba(255,255,255,.09);border-color:rgba(152,180,218,.38)}
+.idcam-tool-btn:disabled{opacity:.42;cursor:not-allowed}
+.idcam-tool-btn.is-on{border-color:rgba(67,237,194,.55);background:rgba(67,237,194,.1);color:#73f4ce}
+.idcam-tool-icon{font-size:20px;color:#69c8ff;line-height:1}
+.idcam-capture-btn{height:58px;display:flex;align-items:center;justify-content:center;gap:11px;padding:0 20px;border:1px solid #2e8aff;border-radius:15px;background:linear-gradient(115deg,#0052ff,#167eff);color:white;font-size:12px;font-weight:900;box-shadow:0 8px 28px rgba(0,82,255,.23),inset 0 1px rgba(255,255,255,.2);transition:filter .18s,transform .18s}
+.idcam-capture-btn:hover{filter:brightness(1.08);transform:translateY(-1px)}
+.idcam-capture-btn:disabled{opacity:.45;cursor:not-allowed;filter:grayscale(.25)}
+.idcam-capture-ring{width:28px;height:28px;border:2px solid rgba(255,255,255,.92);border-radius:50%;display:grid;place-items:center;flex-shrink:0}
+.idcam-capture-ring i{width:17px;height:17px;border-radius:50%;background:#fff;display:block}
+.idcam-cancel-btn{background:rgba(255,255,255,.025);color:#b9c7db}
+.idcam-privacy-note{margin:0;padding:0 clamp(16px,4vw,48px) calc(14px + env(safe-area-inset-bottom));display:flex;align-items:center;justify-content:center;gap:7px;color:#5f718c;font-size:9px;line-height:1.45;text-align:center;flex-shrink:0}
+.idcam-privacy-note span{color:#5ce1c2;font-weight:900}
+.idcam-review-view{display:flex;flex-direction:column;min-height:0;flex:1;padding:0 clamp(16px,4vw,48px) calc(12px + env(safe-area-inset-bottom));overflow:auto}
+.idcam-review-status{display:flex;align-items:center;gap:13px;padding:clamp(16px,3vh,28px) 0 18px}
+.idcam-check{display:grid;place-items:center;width:42px;height:42px;flex-shrink:0;border:1px solid rgba(67,237,194,.22);border-radius:13px;background:rgba(67,237,194,.09);color:#43edc2;font-size:22px}
+.idcam-review-status strong{display:block;font:800 17px 'Manrope',sans-serif;color:#f2f7ff}
+.idcam-review-status p{margin:5px 0 0;color:#8fa2bd;font-size:11px;line-height:1.45}
+.idcam-review-frame{flex:1;min-height:140px;max-height:58vh;display:flex;align-items:center;justify-content:center;overflow:hidden;border:1px solid rgba(153,181,219,.17);border-radius:16px;background:radial-gradient(ellipse at 50% 0%,#13243d,#03070f 75%);padding:12px}
+.idcam-review-frame img{display:block;max-width:100%;max-height:100%;object-fit:contain;border-radius:5px;background:#05070d;box-shadow:0 12px 42px rgba(0,0,0,.25)}
+.idcam-review-frame.id-review-frame{aspect-ratio:auto}
+.idcam-review-frame.id-review-frame img{width:min(100%,1150px);aspect-ratio:1.586/1;object-fit:contain}
+.idcam-review-frame.selfie-review-frame{max-width:520px;width:100%;align-self:center;max-height:58vh}
+.idcam-review-frame.selfie-review-frame img{height:min(56vh,600px);width:auto;aspect-ratio:4/5;object-fit:contain}
+.idcam-review-actions{display:flex;justify-content:flex-end;gap:10px;padding:18px 0 14px}
+.idcam-review-actions .idcam-cancel-btn{min-width:140px}
+.idcam-review-actions .idcam-capture-btn{min-width:180px}
+.idcam-shell .modal-close{display:none}
+@keyframes frameGlow{0%,100%{opacity:.45}50%{opacity:1}}
+@keyframes cornerGlow{from{filter:drop-shadow(0 0 4px rgba(67,237,194,.24))}to{filter:drop-shadow(0 0 10px rgba(67,237,194,.72))}}
+@keyframes livePulse{0%,100%{box-shadow:0 0 0 4px rgba(54,224,180,.10)}50%{box-shadow:0 0 0 7px rgba(54,224,180,.02)}}
+@keyframes fintechIn{from{opacity:.8}to{opacity:1}}
+@media(max-width:760px){
+  .idcam-modal .camera-modal-card.idcam-shell{height:100vh;height:100dvh;max-height:100vh;max-height:100dvh}
+  .idcam-topbar{padding:calc(10px + env(safe-area-inset-top)) 13px 10px;gap:9px}
+  .idcam-brand-mark{width:34px;height:34px;border-radius:10px;font-size:21px}
+  .idcam-brand strong{font-size:11px}.idcam-brand small{font-size:8px}
+  .idcam-step{font-size:8px;letter-spacing:.8px;gap:6px}
+  .idcam-close{width:34px;height:34px;border-radius:10px;font-size:23px}
+  .idcam-heading{padding:15px 16px 12px}
+  .idcam-heading h2{font-size:24px;margin:7px 0 5px}
+  .idcam-heading p{font-size:12px}
+  .idcam-stage{min-height:190px}
+  .idcam-id-guide{width:91vw;border-radius:10px}
+  .idcam-corner{width:19px;height:19px;border-width:3px}
+  .idcam-guide-label{bottom:-28px;font-size:8px}
+  .idcam-face-guide{width:min(66vw,290px);height:min(39vh,370px);height:min(39dvh,370px);min-height:205px}
+  .idcam-helper-row{padding:12px 16px 5px;align-items:flex-start;flex-direction:column;gap:7px}
+  .idcam-helper-row p{text-align:left;font-size:10px}
+  .idcam-controls{grid-template-columns:1fr 1fr;gap:8px;padding:12px 13px calc(10px + env(safe-area-inset-bottom))}
+  .idcam-tool-btn,.idcam-cancel-btn{height:47px;font-size:10px;border-radius:12px;gap:7px;padding:0 10px}
+  .idcam-capture-btn{height:53px;border-radius:13px;font-size:11px;padding:0 12px;grid-column:1/2;grid-row:2}
+  .idcam-cancel-btn{grid-column:2/3;grid-row:2}
+  .idcam-tool-icon{font-size:18px}
+  .idcam-privacy-note{padding:0 15px calc(10px + env(safe-area-inset-bottom));font-size:8px}
+  .idcam-review-view{padding:0 15px calc(10px + env(safe-area-inset-bottom))}
+  .idcam-review-status{padding:15px 0}
+  .idcam-review-status strong{font-size:15px}.idcam-review-status p{font-size:10px}
+  .idcam-review-frame{max-height:50vh;padding:8px;border-radius:13px;min-height:120px}
+  .idcam-review-frame.id-review-frame img{width:100%;height:auto;max-height:45vh}
+  .idcam-review-frame.selfie-review-frame{max-height:48vh}
+  .idcam-review-frame.selfie-review-frame img{height:46vh;width:auto}
+  .idcam-review-actions{padding:13px 0 10px;display:grid;grid-template-columns:1fr 1.25fr;gap:8px}
+  .idcam-review-actions .idcam-cancel-btn,.idcam-review-actions .idcam-capture-btn{min-width:0;width:100%;grid-row:auto;grid-column:auto;height:52px}
+}
+@media(max-height:620px) and (orientation:portrait){
+  .idcam-heading{padding:8px 16px}
+  .idcam-heading h2{font-size:20px}
+  .idcam-heading p{font-size:10px}
+  .idcam-helper-row{padding-top:7px}
+  .idcam-privacy-note{padding-bottom:6px}
+  .idcam-face-guide{height:32dvh;min-height:155px}
+}
