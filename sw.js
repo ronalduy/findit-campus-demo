@@ -1,10 +1,10 @@
-const CACHE_NAME = 'findit-campus-amc-r4-amc-fresh-20261017-r4';
+const CACHE_NAME = 'findit-campus-amc-install-clean-r5-amc-install-clean-20261017-r5';
 const PRECACHE = [
   './', './index.html', './reset-cache.html',
-  './styles.css?v=amc-fresh-20261017-r4', './app.js?v=amc-fresh-20261017-r4', './pwa-install.js?v=amc-fresh-20261017-r4',
-  './manifest.json?v=amc-fresh-20261017-r4', './ave-maria-college-logo.png?v=amc-fresh-20261017-r4',
-  './favicon-32.png?v=amc-fresh-20261017-r4', './icon-180.png?v=amc-fresh-20261017-r4', './icon-192.png?v=amc-fresh-20261017-r4',
-  './icon-512.png?v=amc-fresh-20261017-r4', './icon-512-maskable.png?v=amc-fresh-20261017-r4'
+  './styles.css?v=amc-install-clean-20261017-r5', './app.js?v=amc-install-clean-20261017-r5', './pwa-install.js?v=amc-install-clean-20261017-r5',
+  './manifest.json?v=amc-install-clean-20261017-r5', './ave-maria-college-logo.png?v=amc-install-clean-20261017-r5',
+  './favicon-32.png?v=amc-install-clean-20261017-r5', './icon-180.png?v=amc-install-clean-20261017-r5', './icon-192.png?v=amc-install-clean-20261017-r5',
+  './icon-512.png?v=amc-install-clean-20261017-r5', './icon-512-maskable.png?v=amc-install-clean-20261017-r5'
 ];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(PRECACHE)).catch(err => console.warn('FindIT precache skipped:', err)));

@@ -10,7 +10,7 @@
    if ('caches' in window) { const keys = await caches.keys(); await Promise.all(keys.filter(k=>k.toLowerCase().includes('findit-campus')).map(k=>caches.delete(k))); }
    document.getElementById('status').textContent='Old FindIT caches were cleared. You can now open the updated site.';
  } catch(e) { document.getElementById('status').textContent='Cache clearing was partly blocked by the browser. Open this site in Chrome and try again.'; }
- const b=document.getElementById('go'); b.hidden=false; b.addEventListener('click',()=>location.replace('./index.html?fresh=amc-fresh-20261017-r4'));
- setTimeout(()=>location.replace('./index.html?fresh=amc-fresh-20261017-r4'),1600);
+ const b=document.getElementById('go'); b.hidden=false; b.addEventListener('click',()=>location.replace('./index.html?fresh=amc-install-clean-20261017-r5'));
+ setTimeout(()=>location.replace('./index.html?fresh=amc-install-clean-20261017-r5'),1600);
 })();
 </script></body></html>

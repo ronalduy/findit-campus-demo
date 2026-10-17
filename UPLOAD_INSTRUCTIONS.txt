@@ -1,13 +1,14 @@
-GITHUB UPLOAD CHECKLIST — amc-fresh-20261017-r4
+FINDIT CAMPUS - INSTALL BUTTON CLEANUP
+Build: amc-install-clean-20261017-r5
 
-[ ] Extract this ZIP.
-[ ] Open repo https://github.com/ronalduy/findit-campus-demo.
-[ ] Add file > Upload files.
-[ ] Upload the CONTENTS of the extracted folder at repository root (do not upload the ZIP, do not nest another folder).
-[ ] Replace same-named files.
-[ ] Commit directly to main.
-[ ] Wait for green github-pages deployment.
-[ ] Open https://ronalduy.github.io/findit-campus-demo/reset-cache.html in Chrome on phone.
-[ ] Confirm circular Ave Maria College seal is in header and blue Install button appears.
+1. Extract this ZIP.
+2. Open GitHub repository ronalduy/findit-campus-demo.
+3. Click Add file > Upload files.
+4. Select ALL files and folders inside this extracted folder, not the ZIP file itself. Upload directly to the repository root.
+5. Replace same-named files and Commit changes to main.
+6. Wait for the github-pages deployment to finish.
+7. On the phone, open in Chrome (not Messenger): https://ronalduy.github.io/findit-campus-demo/reset-cache.html
+8. The homepage should show the Ave Maria College logo, keep only the small header Install button, and no large hero install button or “Add to your phone home screen” helper text.
+9. When opened as an installed PWA or after the appinstalled event, the Install button should be hidden.
 
-If old F logo remains, the new index.html did not replace the root index.html or old URL/browser cache is still in use.
+This is the static GitHub Pages demo, not the PHP/MySQL shared system. Use sample data only.
