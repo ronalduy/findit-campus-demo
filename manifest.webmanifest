@@ -1,8 +1,8 @@
 {
   "id": "./index.php",
-  "name": "FindIT Campus \u2014 School Lost & Found",
+  "name": "FindIT Campus - Ave Maria College Lost & Found",
   "short_name": "FindIT Campus",
-  "description": "School lost-and-found portal for verified students and school staff.",
+  "description": "Ave Maria College school lost-and-found portal with verified student accounts.",
   "start_url": "./index.php",
   "scope": "./",
   "display": "standalone",

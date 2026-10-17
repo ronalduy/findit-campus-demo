@@ -137,19 +137,25 @@ KNOWN LIMITATIONS
 
 PHONE USE AND INSTALL AS AN APP (PWA)
 -------------------------------------
-The interface uses responsive CSS and is designed to adapt to phone screens. This package now also includes PWA files so supported browsers can add FindIT Campus to the phone home screen.
+This version uses the supplied Ave Maria College seal as the system logo, browser favicon, and installed-app icon. A visible "Install App" button appears on the sign-in page.
 
-Included PWA files:
-- manifest.webmanifest: app name, icons, start page, and standalone display settings.
-- service-worker.js: caches the static CSS/JS/icons only. It deliberately does NOT cache PHP pages, logged-in content, or private student photos.
-- assets/pwa.js: registers the service worker and shows supported install guidance.
-- assets/icons/: install icons for Android and iOS.
+What the Install App button does:
+- Android Chrome/compatible browsers: when the browser says the site is installable, the button opens the browser's install confirmation. After the user accepts, FindIT Campus is added to the phone's app list/home screen. This is a PWA install; it is not a downloaded APK file.
+- iPhone/iPad: Safari does not provide the same JavaScript install prompt. The button explains how to use Share > Add to Home Screen.
+- In-app browsers such as Messenger may block the install prompt. Open the site in Chrome (Android) or Safari (iPhone) first.
+- If the browser has not made the site installable yet, the button explains how to use the browser menu's Install app / Add to Home screen option.
 
-Important hosting requirements:
-1. The PHP + MySQL application must be hosted on a server that supports PHP and MySQL. GitHub Pages cannot run this application.
-2. For actual installation as a PWA and camera access, use HTTPS hosting. Browsers block service workers and camera access on most non-secure network URLs.
-3. XAMPP running on your PC can be viewed from a phone on the same Wi-Fi by using the PC's LAN IP address, but camera access and PWA installation may not work over ordinary HTTP. For full phone testing, use HTTPS hosting or a properly configured HTTPS test tunnel.
-4. Android Chrome: open the HTTPS site, then choose Install app/Add to Home screen (or use the in-page Install button if the browser displays it).
-5. iPhone Safari: open the HTTPS site, tap Share, then Add to Home Screen.
-6. Installing the PWA creates an app-like shortcut to the hosted PHP website. The PHP server and MySQL database still need to be online; this does not turn the system into a fully offline native app.
-7. Use fictional student details for tests. Confirm the school has approved the privacy notice and retention rules before collecting real ID and selfie photos.
+Required for real phone installation:
+1. Host the PHP + MySQL project on a server that supports PHP and MySQL/MariaDB and uses HTTPS. GitHub Pages cannot run this PHP application.
+2. Keep manifest.webmanifest, service-worker.js, assets/pwa.js, assets/icons/, and assets/brand/ave-maria-college-logo.png at the provided paths.
+3. Use the homepage sign-in page and tap Install App. The browser must approve the install; a webpage cannot silently force-install an app.
+4. On Android, use Chrome or another compatible browser. On iPhone, open the HTTPS link in Safari, tap Share, choose Add to Home Screen, enable Open as Web App if displayed, and tap Add.
+5. PWA installation adds a home-screen/app-list icon and app-like window. PHP pages and MySQL-backed data still need the hosted server online. This is not an APK or a fully offline native app.
+
+The install button may not show a native confirmation if the website is not served over HTTPS, its manifest/icons are not available, the browser does not support the install prompt, or the app is already installed. The visible button then provides browser-specific instructions.
+
+LOGO
+----
+The school seal provided for this project is stored at assets/brand/ave-maria-college-logo.png and used in the main site header, login panel, camera brand, favicon, and app icons. If the school supplies an updated official logo, replace the brand image and regenerate the icon files before release.
+
+Use sample/fake student data during tests. Do not upload school ID photos, selfie images, student records, database exports, or credentials to a public GitHub repository.

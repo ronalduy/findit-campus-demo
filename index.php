@@ -19,7 +19,7 @@ render_header('Sign in');
   </div>
   <div class="auth-panel-wrap">
     <div class="auth-panel">
-      <div class="panel-heading"><span class="mini-brand">F</span><div><h2>Welcome back</h2><p>Sign in to your school account.</p></div></div>
+      <div class="panel-heading"><img class="mini-brand-logo" src="assets/brand/ave-maria-college-logo.png" alt="Ave Maria College seal"><div><h2>Welcome back</h2><p>Sign in to your school account.</p></div></div>
       <form method="post" action="login_action.php" class="form-stack">
         <?= csrf_field() ?>
         <label class="field-label" for="identifier">Student ID Number or Admin Username</label>

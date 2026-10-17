@@ -57,7 +57,7 @@ render_header('Student registration');
 
 <div class="camera-modal" id="camera-modal" aria-hidden="true" hidden>
   <div class="camera-shell" role="dialog" aria-modal="true" aria-labelledby="camera-title">
-    <header class="camera-topbar"><a class="camera-brand"><span class="brand-mark mini"><span>F</span></span><span>FindIT <b>Verify</b></span></a><div class="camera-step" id="camera-step-label">STEP 1 · SCHOOL ID</div><button type="button" class="camera-close" id="camera-close" aria-label="Close camera">×</button></header>
+    <header class="camera-topbar"><a class="camera-brand"><span class="brand-mark mini brand-mark-logo"><img src="assets/brand/ave-maria-college-logo.png" alt="Ave Maria College seal"></span><span>FindIT <b>Verify</b></span></a><div class="camera-step" id="camera-step-label">STEP 1 · SCHOOL ID</div><button type="button" class="camera-close" id="camera-close" aria-label="Close camera">×</button></header>
     <div class="camera-instructions"><span class="camera-live-dot"></span><div><h2 id="camera-title">Align your school ID</h2><p id="camera-instruction">Fit the entire card inside the landscape frame. Keep all four corners visible.</p></div></div>
     <div class="camera-stage-wrap" id="camera-stage-wrap">
       <div class="camera-stage" id="camera-stage">

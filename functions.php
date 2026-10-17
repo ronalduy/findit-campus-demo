@@ -212,19 +212,20 @@ function render_header(string $title, string $active = ''): void
       <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
       <meta name="apple-mobile-web-app-title" content="FindIT Campus">
       <link rel="manifest" href="manifest.webmanifest">
+      <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
       <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/icon-192.png">
       <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
       <title><?= e($title) ?> · FindIT Campus</title>
       <link rel="preconnect" href="https://fonts.googleapis.com">
       <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
       <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
-      <link rel="stylesheet" href="assets/styles.css?v=20261017-1">
+      <link rel="stylesheet" href="assets/styles.css?v=20261017-logo-install2">
     </head>
     <body>
     <div class="app-shell">
       <header class="topbar">
         <a class="brand" href="<?= $user ? ($user['role'] === 'admin' ? 'admin-dashboard.php' : 'lost-items.php') : 'index.php' ?>">
-          <span class="brand-mark"><span>F</span><i></i></span>
+          <span class="brand-mark brand-mark-logo"><img src="assets/brand/ave-maria-college-logo.png" alt="Ave Maria College seal"></span>
           <span class="brand-copy"><strong>FindIT<span>Campus</span></strong><small>School Lost &amp; Found</small></span>
         </a>
         <?php if ($user): ?>
@@ -240,7 +241,7 @@ function render_header(string $title, string $active = ''): void
           </div>
           <button class="mobile-menu-btn" type="button" aria-label="Toggle navigation" onclick="document.body.classList.toggle('nav-open')">☰</button>
         <?php else: ?>
-          <div class="topbar-right"><span class="secure-label"><span class="secure-dot"></span> School community portal</span><a class="btn btn-outline btn-small" href="index.php">Sign in</a></div>
+          <div class="topbar-right"><span class="secure-label"><span class="secure-dot"></span> School community portal</span><button class="btn btn-primary btn-small pwa-install-trigger" type="button" aria-label="Install FindIT Campus">⬇ <span>Install App</span></button><a class="btn btn-outline btn-small" href="index.php">Sign in</a></div>
         <?php endif; ?>
       </header>
       <?php if ($user): ?>
@@ -262,18 +263,13 @@ function render_footer(): void
       </main>
       <footer class="site-footer"><span>© <?= date('Y') ?> FindIT Campus</span><span>Lost it? Find it. Return it with care.</span></footer>
     </div>
-    <aside class="pwa-install-card" id="pwa-install-card" hidden aria-live="polite">
-      <div class="pwa-install-copy"><strong>Install FindIT Campus</strong><small>Add the school portal to your phone home screen.</small></div>
-      <button class="btn btn-primary pwa-install-btn" type="button" id="pwa-install-btn" hidden>Install</button>
-      <button class="pwa-dismiss-btn" type="button" id="pwa-install-dismiss" aria-label="Dismiss install message">×</button>
+    <aside class="pwa-install-card" id="pwa-install-card" hidden aria-live="polite" role="status">
+      <img class="pwa-install-logo" src="assets/icons/icon-192.png" alt="Ave Maria College logo">
+      <div class="pwa-install-copy"><strong id="pwa-install-title">Install FindIT Campus</strong><small id="pwa-install-description">Add the school portal to your phone home screen.</small></div>
+      <button class="pwa-dismiss-btn" type="button" id="pwa-install-dismiss" aria-label="Close install instructions">×</button>
     </aside>
-    <aside class="pwa-ios-hint" id="pwa-ios-hint" hidden aria-live="polite">
-      <strong>Install FindIT Campus</strong>
-      <span>In Safari, tap Share, then choose <b>Add to Home Screen</b>.</span>
-      <button type="button" id="pwa-ios-dismiss" aria-label="Dismiss install instructions">×</button>
-    </aside>
-    <script src="assets/app.js?v=20261017-1"></script>
-    <script src="assets/pwa.js?v=20261017-pwa1"></script>
+    <script src="assets/app.js?v=20261017-logo-install2"></script>
+    <script src="assets/pwa.js?v=20261017-pwa2"></script>
     </body>
     </html>
     <?php

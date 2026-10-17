@@ -50,3 +50,16 @@ PWA / PHONE TESTS
 [ ] Confirm PHP pages and private ID/selfie images are not cached by the service worker.
 [ ] Confirm camera permissions work over HTTPS on target phones.
 [ ] Confirm sign-in, approval, item pages, and handover still use the live server.
+
+
+PWA INSTALL / LOGO CHECKS
+-------------------------
+[ ] Ave Maria College seal appears in the main site header and sign-in panel.
+[ ] Browser tab favicon and installed-app icon show the school seal.
+[ ] Install App button is visible on the signed-out landing page.
+[ ] On an installable Android HTTPS deployment, tapping Install App opens the browser's install prompt.
+[ ] On iPhone Safari, tapping Install App explains Share > Add to Home Screen.
+[ ] In an in-app browser, install help recommends opening in Chrome/Safari.
+[ ] After installation, the app opens in standalone mode with the correct title and icon.
+[ ] Service worker caches only public static assets and never PHP pages or private photos.
+[ ] Updated service worker version replaces older cached icon and style assets.
