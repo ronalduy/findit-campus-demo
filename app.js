@@ -194,46 +194,59 @@
   document.querySelectorAll('[data-close-camera]').forEach(button => button.addEventListener('click', closeCamera));
   $('retakeIdBtn').addEventListener('click', () => startCamera('id'));
   $('retakeSelfieBtn').addEventListener('click', () => startCamera('selfie'));
-  // Capture the complete camera frame for the saved school-ID photo so a browser-specific
-  // video crop can never cut the card off. Separately, calculate a crop matching the visible
-  // guide for OCR; the full frame is also sent to OCR as a fallback.
-  function captureVisibleGuideCrop(video) {
-    const vw = video.videoWidth;
-    const vh = video.videoHeight;
-    const videoRect = video.getBoundingClientRect();
-    const guideRect = $('cameraFrameOverlay').getBoundingClientRect();
-    if (!vw || !vh || !videoRect.width || !videoRect.height || !guideRect.width || !guideRect.height) return null;
+  // Capture the exact center-cropped view shown by CSS object-fit: cover.
+  // On some phone browsers the raw camera frame has a different aspect ratio from
+  // the visible camera window. Saving the raw frame makes the ID appear shifted;
+  // crop the source to the displayed frame's aspect ratio before saving.
+  function captureVideoView(video, targetElement, outputCanvas, maxDimension = 2400, quality = 0.94) {
+    const sourceWidth = video.videoWidth;
+    const sourceHeight = video.videoHeight;
+    const rect = targetElement.getBoundingClientRect();
+    if (!sourceWidth || !sourceHeight || !rect.width || !rect.height) {
+      throw new Error('The camera frame is not ready. Please reopen the camera and try again.');
+    }
 
-    // Reproduce CSS object-fit: cover. This maps the guide's displayed position back to
-    // the exact source-pixel region visible through the video element.
-    const scale = Math.max(videoRect.width / vw, videoRect.height / vh);
-    const renderedWidth = vw * scale;
-    const renderedHeight = vh * scale;
-    const renderedLeft = videoRect.left + (videoRect.width - renderedWidth) / 2;
-    const renderedTop = videoRect.top + (videoRect.height - renderedHeight) / 2;
-    let sx = (guideRect.left - renderedLeft) / scale;
-    let sy = (guideRect.top - renderedTop) / scale;
-    let ex = (guideRect.right - renderedLeft) / scale;
-    let ey = (guideRect.bottom - renderedTop) / scale;
+    const targetAspect = rect.width / rect.height;
+    let sx = 0, sy = 0, sw = sourceWidth, sh = sourceHeight;
+    const sourceAspect = sourceWidth / sourceHeight;
 
-    sx = Math.max(0, Math.min(vw, sx));
-    sy = Math.max(0, Math.min(vh, sy));
-    ex = Math.max(0, Math.min(vw, ex));
-    ey = Math.max(0, Math.min(vh, ey));
-    const sw = ex - sx;
-    const sh = ey - sy;
-    // Reject implausible crops; the uncropped photo will still be saved and OCRed.
-    if (sw < vw * 0.22 || sh < vh * 0.22 || sw <= 0 || sh <= 0) return null;
+    // This mirrors object-fit: cover with object-position: center center.
+    if (sourceAspect > targetAspect) {
+      sw = sourceHeight * targetAspect;
+      sx = (sourceWidth - sw) / 2;
+    } else if (sourceAspect < targetAspect) {
+      sh = sourceWidth / targetAspect;
+      sy = (sourceHeight - sh) / 2;
+    }
 
-    const cropCanvas = document.createElement('canvas');
-    const outputWidth = 2200;
-    cropCanvas.width = outputWidth;
-    cropCanvas.height = Math.max(1, Math.round(outputWidth * sh / sw));
-    const cropCtx = cropCanvas.getContext('2d');
-    cropCtx.imageSmoothingEnabled = true;
-    cropCtx.imageSmoothingQuality = 'high';
-    cropCtx.drawImage(video, sx, sy, sw, sh, 0, 0, cropCanvas.width, cropCanvas.height);
-    return cropCanvas.toDataURL('image/jpeg', 0.96);
+    // Clamp floating-point rounding to the source frame bounds.
+    sx = Math.max(0, Math.min(sourceWidth - 1, sx));
+    sy = Math.max(0, Math.min(sourceHeight - 1, sy));
+    sw = Math.max(1, Math.min(sourceWidth - sx, sw));
+    sh = Math.max(1, Math.min(sourceHeight - sy, sh));
+
+    const scale = Math.min(1, maxDimension / Math.max(sw, sh));
+    outputCanvas.width = Math.max(1, Math.round(sw * scale));
+    outputCanvas.height = Math.max(1, Math.round(sh * scale));
+    const outputContext = outputCanvas.getContext('2d', { willReadFrequently: true });
+    outputContext.imageSmoothingEnabled = true;
+    outputContext.imageSmoothingQuality = 'high';
+    outputContext.drawImage(video, sx, sy, sw, sh, 0, 0, outputCanvas.width, outputCanvas.height);
+    return outputCanvas.toDataURL('image/jpeg', quality);
+  }
+
+  // Keep a smaller full camera frame only as an OCR fallback. Never use it for the
+  // saved preview, because its aspect ratio may differ from the live camera window.
+  function captureFullSourceForOcr(video, maxDimension = 1800) {
+    const sourceWidth = video.videoWidth;
+    const sourceHeight = video.videoHeight;
+    const scale = Math.min(1, maxDimension / Math.max(sourceWidth, sourceHeight));
+    const fullCanvas = document.createElement('canvas');
+    fullCanvas.width = Math.max(1, Math.round(sourceWidth * scale));
+    fullCanvas.height = Math.max(1, Math.round(sourceHeight * scale));
+    const fullContext = fullCanvas.getContext('2d');
+    fullContext.drawImage(video, 0, 0, fullCanvas.width, fullCanvas.height);
+    return fullCanvas.toDataURL('image/jpeg', 0.88);
   }
 
   $('takePhotoBtn').addEventListener('click', async () => {
@@ -244,35 +257,29 @@
     let ocrSources = [];
 
     if (type === 'id') {
-      const vw = video.videoWidth;
-      const vh = video.videoHeight;
-      // Keep the full source frame for the saved review photo. Do not crop the photo based
-      // on assumptions about a phone browser's video orientation or display aspect ratio.
-      const maxDimension = 2400;
-      const scale = Math.min(1, maxDimension / Math.max(vw, vh));
-      canvas.width = Math.max(1, Math.round(vw * scale));
-      canvas.height = Math.max(1, Math.round(vh * scale));
-      ctx.imageSmoothingEnabled = true;
-      ctx.imageSmoothingQuality = 'high';
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      const fullFrameData = canvas.toDataURL('image/jpeg', 0.94);
-
-      // Use an exact guide-aligned crop for OCR first, then the uncropped full frame as a
-      // fallback. If a browser reports unusual camera dimensions, the full frame is safe.
+      let displayedPhoto;
+      let fullSourceForOcr = '';
       try {
-        const guideCropData = captureVisibleGuideCrop(video);
-        if (guideCropData) ocrSources.push(guideCropData);
-      } catch (err) {
-        console.warn('Guide crop was unavailable; OCR will use the full photo.', err);
+        // Save exactly the visible camera window; it matches the live landscape frame.
+        displayedPhoto = captureVideoView(video, $('cameraFrame'), canvas, 2400, 0.95);
+        // The wider image is a secondary OCR fallback only, never the saved preview.
+        try { fullSourceForOcr = captureFullSourceForOcr(video); } catch (ocrFrameError) {
+          console.warn('The wider OCR fallback could not be created.', ocrFrameError);
+        }
+      } catch (captureError) {
+        console.error('School ID capture failed:', captureError);
+        showToast(captureError.message || 'Could not capture the camera view. Please try again.', 'error');
+        return;
       }
-      ocrSources.push(fullFrameData);
-      // The stored/admin-review image is intentionally the complete frame: it must not lose
-      // the school ID due to crop-coordinate differences between browsers.
-      let dataUrl = fullFrameData;
-      try { dataUrl = await compressDataUrl(fullFrameData, 1800, 0.88); } catch (_) {}
+
+      const ocrSources = [displayedPhoto];
+      if (fullSourceForOcr) ocrSources.push(fullSourceForOcr);
+      let savedPhoto = displayedPhoto;
+      try { savedPhoto = await compressDataUrl(displayedPhoto, 1800, 0.91); } catch (_) {}
+
       closeCamera();
-      setPhotoStage(type, dataUrl);
-      showToast('Full camera photo saved. Reading the guide area and checking the full photo for ID text…', 'success');
+      setPhotoStage(type, savedPhoto);
+      showToast('Saved the same landscape view shown by the camera. Reading the ID automatically…', 'success');
       runIdOcr(ocrSources);
       return;
     }
@@ -335,8 +342,8 @@
         for (let passIndex = 0; passIndex < passes.length; passIndex++) {
           if (myRun !== ocrSequence) return;
           if (sourceIndex === 1) status.textContent = passIndex === 0
-            ? 'Checking the complete saved photo for any missed ID text…'
-            : `Checking the complete photo (${passIndex + 1} of 3)…`;
+            ? 'Checking a wider camera frame for any missed ID text…'
+            : `Checking the wider camera frame (${passIndex + 1} of 3)…`;
           else status.textContent = passIndex === 0 ? 'Reading text inside the ID guide…' : `Improving ID text reading (${passIndex + 1} of 3)…`;
           const prepared = await prepareIdForOcr(sources[sourceIndex], passes[passIndex].mode);
           const result = await worker.recognize(prepared);
@@ -359,15 +366,15 @@
           !parsed.fullName ? 'name' : '',
           !parsed.program ? 'program/course' : ''
         ].filter(Boolean).join(', ');
-        status.textContent = `The reader found ${count} of 3 details. ${missing ? `Please enter or correct: ${missing}. ` : ''}The complete photo was saved so you can review it.`;
+        status.textContent = `The reader found ${count} of 3 details. ${missing ? `Please enter or correct: ${missing}. ` : ''}The camera-view photo was saved so you can review it.`;
         status.style.background = '#fff7e8'; status.style.color = '#956b21';
       } else {
-        status.textContent = 'The complete photo was saved, but the text was not clear enough to fill safely. Check the photo and type the three details manually if needed.';
+        status.textContent = 'The camera-view photo was saved, but the text was not clear enough to fill safely. Check the photo and type the three details manually if needed.';
         status.style.background = '#fff7e8'; status.style.color = '#956b21';
       }
     } catch (err) {
       if (myRun !== ocrSequence) return;
-      status.textContent = `${err.message || 'Automatic ID reading failed.'} The full photo is saved; please enter or correct the three details manually.`;
+      status.textContent = `${err.message || 'Automatic ID reading failed.'} The camera-view photo is saved; please enter or correct the three details manually.`;
       status.style.background = '#fff2f3'; status.style.color = '#c64e5b';
     } finally {
       activeOcrLogger = null;

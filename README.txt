@@ -41,7 +41,9 @@ LATEST UPDATE — SELFIE FACE GUIDE
 - This oval is a visual positioning guide only. It does not perform automatic face recognition, face-to-ID matching, or liveness detection. Admin/Teacher must manually verify the application.
 
 
-LATEST CAPTURE FIX
-- The school-ID photo saved for staff review is the full camera frame, not a risky center crop. This prevents the saved image from cutting off the ID when a phone browser uses different preview dimensions.
-- OCR checks the visible guide crop first and then the complete saved photo if needed.
-- After updating GitHub Pages, close the old phone tab and reopen the website so the v6 service-worker cache can activate.
+CURRENT CAPTURE FIX (v7)
+- The saved school ID image now matches the landscape camera view shown on screen.
+- The saved preview uses a center crop based on the actual camera window ratio, matching CSS object-fit: cover.
+- A wider, uncropped source frame is used only as a secondary OCR attempt; it is not used as the saved ID preview.
+- After uploading updates to GitHub Pages, close the old phone tab and open the site again so the new service-worker cache can activate.
+- OCR can still misread text; verify the student number, name, and program manually.
