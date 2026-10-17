@@ -1,0 +1,52 @@
+FINDIT CAMPUS BASIC TEST CHECKLIST
+==================================
+Mark each result only after running the test. Do not report a test as passed before executing it.
+
+AUTHENTICATION / REGISTRATION
+[ ] Open login page using localhost
+[ ] Invalid login shows a safe error
+[ ] Five failed login attempts trigger a temporary lock
+[ ] Registration requires student ID, name, program, password, ID photo, selfie and privacy acknowledgement
+[ ] Browser camera permission denied displays a helpful message
+[ ] Captured ID preview matches the viewfinder crop
+[ ] Captured selfie preview keeps the face centered in portrait crop
+[ ] OCR suggestions are editable
+[ ] OCR-unreadable fields can be typed manually
+[ ] Duplicate Student ID is rejected
+[ ] Newly submitted student status is Pending
+[ ] Pending student cannot log in
+[ ] Admin sees ID and selfie photos in the application queue
+[ ] Admin approval allows student login
+[ ] Rejected application cannot log in
+[ ] Correction-required application can update and resubmit details/photos
+[ ] Student cannot open admin pages directly
+[ ] Session expires after 30 minutes of inactivity
+[ ] Password can be changed after login
+
+ITEMS / CLAIMS / REPORTS
+[ ] Admin creates a Lost report with a photo
+[ ] Admin creates a Found item with a photo
+[ ] Unique reference is generated
+[ ] Student sees only Lost Items and Found Items as main navigation
+[ ] Search by keyword and category works
+[ ] Item image is only served to a signed-in user
+[ ] Item detail shows reference and in-person claim instructions
+[ ] Handover rejects unavailable/already returned item
+[ ] Handover saves claimant, staff, date and notes
+[ ] Found item becomes Returned after handover
+[ ] Linked Lost report becomes Closed after handover when selected
+[ ] CSV export opens correctly in spreadsheet software
+[ ] Activity logs show important admin actions
+[ ] Private ID/selfie photo URL is blocked to a student who is not the owner
+[ ] Backup/restore procedure is followed and checked manually
+
+
+PWA / PHONE TESTS
+-----------------
+[ ] On a phone, confirm the page layout fits small screens without horizontal overflow.
+[ ] On HTTPS hosting, confirm service-worker registration succeeds.
+[ ] Android Chrome: confirm Install/Add to Home Screen option appears when browser criteria are met.
+[ ] iPhone Safari: confirm Add to Home Screen launches the app-style shortcut.
+[ ] Confirm PHP pages and private ID/selfie images are not cached by the service worker.
+[ ] Confirm camera permissions work over HTTPS on target phones.
+[ ] Confirm sign-in, approval, item pages, and handover still use the live server.
