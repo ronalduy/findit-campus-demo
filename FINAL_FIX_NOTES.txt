@@ -1,0 +1,25 @@
+FINDIT CAMPUS — FINAL CAMERA CENTERING FIX
+
+This update specifically addresses preview-versus-saved-photo mismatch for both the school ID and selfie.
+
+What changed:
+- Camera video is explicitly fitted to the visible frame using a known centered object-fit rule.
+- If the ID camera supplies portrait video while the ID guide is landscape, the preview video is rotated 90 degrees, and the capture pipeline applies the same rotation to the pixels before cropping.
+- Both ID and selfie capture save a center crop matching the preview frame ratio, rather than saving the raw un-cropped video source.
+- The registration-stage selfie preview uses contain so it does not crop the captured selfie a second time.
+- When the phone orientation or viewport changes, video presentation is recalculated without repeatedly restarting the camera stream.
+- The service worker cache name is incremented to v11.
+
+To publish:
+1. Open the folder contents.
+2. Upload index.html, styles.css, app.js, manifest.json and sw.js directly into the root of the existing GitHub repository.
+3. Upload the icons folder if needed.
+4. Commit changes.
+5. Open the site in Chrome/Safari directly, not in Messenger's in-app browser. Close the old tab and reopen the website after deployment.
+6. Test with sample/fake student details first. Check the captured image before submitting.
+
+Limitations:
+- This is still a browser demo using local browser storage, not a secure production account system.
+- Browser, camera driver and in-app browser behavior may vary. This fix has been syntax-checked, but cannot be physically verified on the user's handset from this environment.
+- OCR can make mistakes. Always check the extracted ID number, name and program manually.
+- Do not upload real school ID photos or personal information to a public repository.

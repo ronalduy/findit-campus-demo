@@ -71,3 +71,12 @@ LATEST UPDATE — EDGE-TO-EDGE LANDSCAPE CAMERA (v10)
 - The PWA manifest now requests landscape orientation when installed as an app, where the operating system/browser supports it.
 - After uploading, replace index.html, styles.css, app.js, manifest.json and sw.js in the repository root. Keep the existing icons folder. Commit changes, wait for Pages to deploy, close old tabs, then reopen the site.
 - This is still a browser demo. A landscape guide is not face recognition or liveness detection, and OCR results must be checked manually.
+
+
+LATEST UPDATE — PREVIEW-MATCHED ID AND SELFIE CAPTURE (v11)
+- The capture pipeline now applies the same center crop as the camera frame for both ID and selfie photos.
+- If the ID camera receives a portrait source while the visible guide is landscape, the video preview is rotated 90 degrees and the capture canvas applies the same rotation before cropping.
+- The selfie photo is no longer saved from the uncropped sensor frame; it uses the same centered portrait view shown behind the face oval.
+- The camera frame is recalculated when the phone orientation or browser viewport changes.
+- Upload index.html, styles.css, app.js, and sw.js to the repository root, then close/reopen the site on the phone to refresh the service worker.
+- Test first with a sample ID. Browser camera dimensions and in-app browser behavior vary, so check the saved preview and OCR result on the target phone before using any real student data.

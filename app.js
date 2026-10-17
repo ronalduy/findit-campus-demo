@@ -167,9 +167,48 @@
   }
   function isLandscapeIdFrameReady(video = $('cameraVideo')) {
     if (cameraType !== 'id') return true;
-    const hasDimensions = video.videoWidth > 0 && video.videoHeight > 0;
-    const feedIsPortrait = hasDimensions && video.videoHeight > video.videoWidth;
-    return !isPortraitMobileLayout() && !feedIsPortrait;
+    // The capture code can rotate a portrait camera feed into the landscape ID guide.
+    // We only block while the phone/browser viewport itself is still portrait.
+    return !isPortraitMobileLayout() && video.videoWidth > 0 && video.videoHeight > 0;
+  }
+
+  function clearVideoPresentation(video = $('cameraVideo')) {
+    ['position','width','height','max-width','max-height','left','top','transform','transform-origin','object-fit','object-position','z-index'].forEach(prop => video.style.removeProperty(prop));
+    delete video.dataset.finditRotate;
+  }
+
+  // Make the live feed fit the guide intentionally. Some mobile in-app browsers
+  // report a portrait video frame even after the page has become landscape. Rotate
+  // that ID feed for display, then use the same rotation in the saved canvas.
+  function syncVideoPresentation(type = cameraType) {
+    const video = $('cameraVideo');
+    const frame = $('cameraFrame');
+    if (!video || !frame || !video.videoWidth || !video.videoHeight) return;
+    const rect = frame.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+    clearVideoPresentation(video);
+    const rotateIdFeed = type === 'id' && rect.width > rect.height && video.videoHeight > video.videoWidth;
+    video.style.setProperty('position', 'absolute', 'important');
+    video.style.setProperty('left', '50%', 'important');
+    video.style.setProperty('top', '50%', 'important');
+    video.style.setProperty('transform-origin', 'center center', 'important');
+    video.style.setProperty('max-width', 'none', 'important');
+    video.style.setProperty('max-height', 'none', 'important');
+    video.style.setProperty('object-fit', 'cover', 'important');
+    video.style.setProperty('object-position', 'center center', 'important');
+    if (rotateIdFeed) {
+      // Before a 90-degree rotation, swap the video element's CSS width/height so
+      // its post-rotation bounds exactly match the landscape camera frame.
+      video.style.setProperty('width', `${Math.round(rect.height)}px`, 'important');
+      video.style.setProperty('height', `${Math.round(rect.width)}px`, 'important');
+      video.style.setProperty('transform', 'translate(-50%, -50%) rotate(90deg)', 'important');
+      video.dataset.finditRotate = '90';
+    } else {
+      video.style.setProperty('width', '100%', 'important');
+      video.style.setProperty('height', '100%', 'important');
+      video.style.setProperty('transform', 'translate(-50%, -50%)', 'important');
+      delete video.dataset.finditRotate;
+    }
   }
   function syncIdLandscapeGuard() {
     const notice = $('cameraOrientationNotice');
@@ -227,7 +266,7 @@
     card.classList.toggle('face-camera-card', type === 'selfie');
     card.classList.toggle('landscape-id-layout', type === 'id');
     modal.classList.toggle('camera-fullscreen-fallback', type === 'id');
-    video.style.transform = 'none';
+    clearVideoPresentation(video);
     $('cameraError').classList.add('hidden');
     $('cameraLoading').classList.remove('hidden');
     $('takePhotoBtn').disabled = true;
@@ -271,6 +310,9 @@
       video.srcObject = cameraStream;
       await video.play();
       await waitForVideoDimensions(video);
+      // Wait for the modal/fullscreen layout to settle before mapping preview pixels.
+      await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      syncVideoPresentation(type);
       $('cameraLoading').classList.add('hidden');
       if (type === 'id') syncIdLandscapeGuard();
       else $('takePhotoBtn').disabled = !video.videoWidth;
@@ -296,7 +338,7 @@
     card.classList.remove('landscape-id-layout');
     card.classList.remove('face-camera-card');
     cameraType = null;
-    $('cameraVideo').style.transform = 'none';
+    clearVideoPresentation($('cameraVideo'));
     // Exit fullscreen and restore normal orientation after capturing or canceling.
     if (document.fullscreenElement === modal && document.exitFullscreen) {
       document.exitFullscreen().catch(() => {});
@@ -313,49 +355,56 @@
   $('retakeSelfieBtn').addEventListener('click', () => startCamera('selfie'));
   let orientationRefreshTimer = null;
   async function refreshCameraForOrientation() {
-    if (cameraType !== 'id' || !cameraStream) return;
+    if (!cameraType || !cameraStream) return;
     if (orientationRefreshTimer) clearTimeout(orientationRefreshTimer);
-    orientationRefreshTimer = setTimeout(async () => {
+    orientationRefreshTimer = setTimeout(() => {
       orientationRefreshTimer = null;
-      if (cameraType !== 'id' || !cameraStream) return;
-      const video = $('cameraVideo');
-      // When the phone turns sideways, some in-app browsers keep the old portrait stream.
-      // Restart once with landscape constraints so the saved image matches the guide.
-      if (!isPortraitMobileLayout() && video.videoWidth && video.videoHeight > video.videoWidth) {
-        try {
-          cameraStream.getTracks().forEach(track => track.stop());
-          cameraStream = null; video.srcObject = null;
-          cameraStream = await navigator.mediaDevices.getUserMedia(getCameraConstraints('id'));
-          video.srcObject = cameraStream; await video.play(); await waitForVideoDimensions(video);
-        } catch (err) {
-          console.warn('Could not restart the camera in landscape mode.', err);
-          $('cameraError').textContent = 'The browser kept the camera in portrait mode. Open FindIT Campus directly in Chrome, rotate the phone sideways, then try again.';
-          $('cameraError').classList.remove('hidden');
-        }
-      }
-      syncIdLandscapeGuard();
-    }, 350);
+      if (!cameraType || !cameraStream) return;
+      syncVideoPresentation(cameraType);
+      if (cameraType === 'id') syncIdLandscapeGuard();
+      else $('takePhotoBtn').disabled = !$('cameraVideo').videoWidth;
+    }, 180);
   }
   window.addEventListener('orientationchange', refreshCameraForOrientation);
   window.addEventListener('resize', refreshCameraForOrientation);
-  $('cameraVideo').addEventListener('resize', () => { if (cameraType === 'id') syncIdLandscapeGuard(); });
-  // Capture the exact center-cropped view shown by CSS object-fit: cover.
-  // On some phone browsers the raw camera frame has a different aspect ratio from
-  // the visible camera window. Saving the raw frame makes the ID appear shifted;
-  // crop the source to the displayed frame's aspect ratio before saving.
-  function captureVideoView(video, targetElement, outputCanvas, maxDimension = 2400, quality = 0.94) {
+  $('cameraVideo').addEventListener('resize', refreshCameraForOrientation);
+
+  // Return the camera pixels in the same orientation as the live preview.
+  // A portrait ID stream may be rotated 90 degrees by syncVideoPresentation().
+  function getOrientedVideoSource(video) {
     const sourceWidth = video.videoWidth;
     const sourceHeight = video.videoHeight;
-    const rect = targetElement.getBoundingClientRect();
-    if (!sourceWidth || !sourceHeight || !rect.width || !rect.height) {
-      throw new Error('The camera frame is not ready. Please reopen the camera and try again.');
+    if (!sourceWidth || !sourceHeight) throw new Error('The camera frame is not ready. Please reopen the camera and try again.');
+    if (video.dataset.finditRotate === '90') {
+      const oriented = document.createElement('canvas');
+      oriented.width = sourceHeight;
+      oriented.height = sourceWidth;
+      const ctx = oriented.getContext('2d', { willReadFrequently: true });
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.translate(oriented.width / 2, oriented.height / 2);
+      ctx.rotate(Math.PI / 2);
+      ctx.drawImage(video, -sourceWidth / 2, -sourceHeight / 2, sourceWidth, sourceHeight);
+      return { source: oriented, width: oriented.width, height: oriented.height };
     }
+    return { source: video, width: sourceWidth, height: sourceHeight };
+  }
 
+  // Save the centered portion of the oriented video that corresponds to the
+  // actual visible frame aspect ratio. Use this for BOTH ID and selfie so the
+  // submitted photo matches the live preview instead of saving the uncropped
+  // camera sensor frame.
+  function captureVideoView(video, targetElement, outputCanvas, maxDimension = 2400, quality = 0.94) {
+    const oriented = getOrientedVideoSource(video);
+    const rect = targetElement.getBoundingClientRect();
+    if (!rect.width || !rect.height) throw new Error('The camera frame is not ready. Please reopen the camera and try again.');
+    const sourceWidth = oriented.width;
+    const sourceHeight = oriented.height;
     const targetAspect = rect.width / rect.height;
     let sx = 0, sy = 0, sw = sourceWidth, sh = sourceHeight;
     const sourceAspect = sourceWidth / sourceHeight;
 
-    // This mirrors object-fit: cover with object-position: center center.
+    // CSS object-fit: cover removes the centered excess from the source.
     if (sourceAspect > targetAspect) {
       sw = sourceHeight * targetAspect;
       sx = (sourceWidth - sw) / 2;
@@ -363,8 +412,6 @@
       sh = sourceWidth / targetAspect;
       sy = (sourceHeight - sh) / 2;
     }
-
-    // Clamp floating-point rounding to the source frame bounds.
     sx = Math.max(0, Math.min(sourceWidth - 1, sx));
     sy = Math.max(0, Math.min(sourceHeight - 1, sy));
     sw = Math.max(1, Math.min(sourceWidth - sx, sw));
@@ -374,23 +421,25 @@
     outputCanvas.width = Math.max(1, Math.round(sw * scale));
     outputCanvas.height = Math.max(1, Math.round(sh * scale));
     const outputContext = outputCanvas.getContext('2d', { willReadFrequently: true });
+    outputContext.clearRect(0, 0, outputCanvas.width, outputCanvas.height);
     outputContext.imageSmoothingEnabled = true;
     outputContext.imageSmoothingQuality = 'high';
-    outputContext.drawImage(video, sx, sy, sw, sh, 0, 0, outputCanvas.width, outputCanvas.height);
+    outputContext.drawImage(oriented.source, sx, sy, sw, sh, 0, 0, outputCanvas.width, outputCanvas.height);
     return outputCanvas.toDataURL('image/jpeg', quality);
   }
 
   // Keep a smaller full camera frame only as an OCR fallback. Never use it for the
   // saved preview, because its aspect ratio may differ from the live camera window.
   function captureFullSourceForOcr(video, maxDimension = 1800) {
-    const sourceWidth = video.videoWidth;
-    const sourceHeight = video.videoHeight;
-    const scale = Math.min(1, maxDimension / Math.max(sourceWidth, sourceHeight));
+    const oriented = getOrientedVideoSource(video);
+    const scale = Math.min(1, maxDimension / Math.max(oriented.width, oriented.height));
     const fullCanvas = document.createElement('canvas');
-    fullCanvas.width = Math.max(1, Math.round(sourceWidth * scale));
-    fullCanvas.height = Math.max(1, Math.round(sourceHeight * scale));
+    fullCanvas.width = Math.max(1, Math.round(oriented.width * scale));
+    fullCanvas.height = Math.max(1, Math.round(oriented.height * scale));
     const fullContext = fullCanvas.getContext('2d');
-    fullContext.drawImage(video, 0, 0, fullCanvas.width, fullCanvas.height);
+    fullContext.imageSmoothingEnabled = true;
+    fullContext.imageSmoothingQuality = 'high';
+    fullContext.drawImage(oriented.source, 0, 0, fullCanvas.width, fullCanvas.height);
     return fullCanvas.toDataURL('image/jpeg', 0.88);
   }
 
@@ -434,14 +483,18 @@
       return;
     }
 
-    // Selfies are saved from the full frame; the oval is only a visual positioning guide.
-    const max = 1000;
-    const selfieScale = Math.min(1, max / Math.max(video.videoWidth, video.videoHeight));
-    canvas.width = Math.max(1, Math.round(video.videoWidth * selfieScale));
-    canvas.height = Math.max(1, Math.round(video.videoHeight * selfieScale));
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    let selfieData = canvas.toDataURL('image/jpeg', 0.70);
-    try { selfieData = await compressDataUrl(selfieData, 1000, 0.64); } catch (_) {}
+    // Save the same centered camera view shown behind the oval guide. This avoids
+    // the old behavior where the preview was portrait-cropped but the saved selfie
+    // used the entire raw camera frame and the face looked off-center/smaller.
+    let selfieData;
+    try {
+      selfieData = captureVideoView(video, $('cameraFrame'), canvas, 1600, 0.90);
+      try { selfieData = await compressDataUrl(selfieData, 1400, 0.84); } catch (_) {}
+    } catch (captureError) {
+      console.error('Selfie capture failed:', captureError);
+      showToast(captureError.message || 'Could not capture the selfie. Please try again.', 'error');
+      return;
+    }
     closeCamera();
     setPhotoStage(type, selfieData);
     showToast('Live selfie captured. It will be shown to the Admin/Teacher for manual review.');
