@@ -162,12 +162,57 @@
       if (type === 'id') $('retakeIdBtn').disabled = true; else $('retakeSelfieBtn').disabled = true;
     }
   }
+  function isPortraitMobileLayout() {
+    return window.matchMedia('(max-width: 760px)').matches && window.matchMedia('(orientation: portrait)').matches;
+  }
+  function isLandscapeIdFrameReady(video = $('cameraVideo')) {
+    if (cameraType !== 'id') return true;
+    const hasDimensions = video.videoWidth > 0 && video.videoHeight > 0;
+    const feedIsPortrait = hasDimensions && video.videoHeight > video.videoWidth;
+    return !isPortraitMobileLayout() && !feedIsPortrait;
+  }
+  function syncIdLandscapeGuard() {
+    const notice = $('cameraOrientationNotice');
+    const video = $('cameraVideo');
+    const needsLandscape = cameraType === 'id' && !isLandscapeIdFrameReady(video);
+    notice.classList.toggle('hidden', !needsLandscape);
+    $('takePhotoBtn').disabled = needsLandscape || !video.videoWidth;
+    if (needsLandscape) {
+      notice.textContent = isPortraitMobileLayout()
+        ? 'Rotate your phone sideways to landscape. If you are using Messenger, open this site in Chrome, then reopen the ID camera. Capture is paused until the phone is landscape.'
+        : 'The camera is still sending a portrait image. Close the camera, rotate the phone sideways, and reopen it in Chrome. Capture is paused to prevent a wrongly cropped ID.';
+    }
+  }
+  function getCameraConstraints(type) {
+    const video = {
+      facingMode: { ideal: type === 'id' ? 'environment' : 'user' },
+      width: { ideal: 1920 },
+      height: { ideal: 1080 }
+    };
+    if (type === 'id') {
+      // Ask the browser for a landscape feed matching the ID-card frame.
+      // The camera may ignore ideal values; the orientation guard below prevents bad captures.
+      video.aspectRatio = { ideal: 85.6 / 53.98 };
+      video.resizeMode = { ideal: 'crop-and-scale' };
+    }
+    return { audio: false, video };
+  }
+  async function waitForVideoDimensions(video) {
+    if (video.videoWidth && video.videoHeight) return;
+    await new Promise(resolve => {
+      let done = false;
+      const finish = () => { if (done) return; done = true; video.removeEventListener('loadedmetadata', finish); resolve(); };
+      video.addEventListener('loadedmetadata', finish, { once: true });
+      setTimeout(finish, 1800);
+    });
+  }
   async function startCamera(type) {
     closeCamera(); cameraType = type;
     $('cameraTitle').textContent = type === 'id' ? 'Capture your school ID' : 'Take your live selfie';
     $('cameraInstruction').textContent = type === 'id'
-      ? 'Use the back camera. Hold the ID horizontally, centered inside the guide, with all four corners visible. Keep the phone steady and avoid glare.'
+      ? 'Turn your phone sideways (landscape) before capturing. Hold the ID horizontally and close enough to fill the guide, with all four corners visible. Keep it steady and avoid glare.'
       : 'Center your face inside the oval guide. Keep your eyes visible and use even lighting.';
+    $('cameraOrientationNotice').classList.add('hidden');
     const frame = $('cameraFrame');
     frame.classList.toggle('id-capture-mode', type === 'id');
     frame.classList.toggle('selfie-capture-mode', type === 'selfie');
@@ -179,11 +224,17 @@
       $('cameraLoading').classList.add('hidden'); $('cameraError').textContent = 'This browser cannot access a camera here. Open the project through VS Code Live Server (http://localhost) or a secure HTTPS page.'; $('cameraError').classList.remove('hidden'); return;
     }
     try {
-      // Request a sharper rear-camera stream; the browser may choose a supported size instead.
-      const constraints = { audio: false, video: { facingMode: { ideal: type === 'id' ? 'environment' : 'user' }, width: { ideal: 1920 }, height: { ideal: 1080 } } };
+      // Best-effort landscape lock. Mobile browsers may reject this unless the page is installed/fullscreen;
+      // if so, the notice asks the student to rotate the phone manually.
+      if (type === 'id' && screen.orientation && typeof screen.orientation.lock === 'function') {
+        try { await screen.orientation.lock('landscape'); } catch (_) { /* manual rotation fallback below */ }
+      }
+      const constraints = getCameraConstraints(type);
       cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
       const video = $('cameraVideo'); video.srcObject = cameraStream; await video.play();
-      $('cameraLoading').classList.add('hidden'); $('takePhotoBtn').disabled = false;
+      await waitForVideoDimensions(video);
+      $('cameraLoading').classList.add('hidden');
+      if (type === 'id') syncIdLandscapeGuard(); else $('takePhotoBtn').disabled = !video.videoWidth;
     } catch (err) {
       $('cameraLoading').classList.add('hidden'); $('cameraError').textContent = err.name === 'NotAllowedError' ? 'Camera permission was blocked. Allow camera access in the browser address bar, then try again.' : 'Camera could not open. Close other apps using the camera and try again.'; $('cameraError').classList.remove('hidden');
     }
@@ -194,6 +245,34 @@
   document.querySelectorAll('[data-close-camera]').forEach(button => button.addEventListener('click', closeCamera));
   $('retakeIdBtn').addEventListener('click', () => startCamera('id'));
   $('retakeSelfieBtn').addEventListener('click', () => startCamera('selfie'));
+  let orientationRefreshTimer = null;
+  async function refreshCameraForOrientation() {
+    if (cameraType !== 'id' || !cameraStream) return;
+    if (orientationRefreshTimer) clearTimeout(orientationRefreshTimer);
+    orientationRefreshTimer = setTimeout(async () => {
+      orientationRefreshTimer = null;
+      if (cameraType !== 'id' || !cameraStream) return;
+      const video = $('cameraVideo');
+      // When the phone turns sideways, some in-app browsers keep the old portrait stream.
+      // Restart once with landscape constraints so the saved image matches the guide.
+      if (!isPortraitMobileLayout() && video.videoWidth && video.videoHeight > video.videoWidth) {
+        try {
+          cameraStream.getTracks().forEach(track => track.stop());
+          cameraStream = null; video.srcObject = null;
+          cameraStream = await navigator.mediaDevices.getUserMedia(getCameraConstraints('id'));
+          video.srcObject = cameraStream; await video.play(); await waitForVideoDimensions(video);
+        } catch (err) {
+          console.warn('Could not restart the camera in landscape mode.', err);
+          $('cameraError').textContent = 'The browser kept the camera in portrait mode. Open FindIT Campus directly in Chrome, rotate the phone sideways, then try again.';
+          $('cameraError').classList.remove('hidden');
+        }
+      }
+      syncIdLandscapeGuard();
+    }, 350);
+  }
+  window.addEventListener('orientationchange', refreshCameraForOrientation);
+  window.addEventListener('resize', refreshCameraForOrientation);
+  $('cameraVideo').addEventListener('resize', () => { if (cameraType === 'id') syncIdLandscapeGuard(); });
   // Capture the exact center-cropped view shown by CSS object-fit: cover.
   // On some phone browsers the raw camera frame has a different aspect ratio from
   // the visible camera window. Saving the raw frame makes the ID appear shifted;
@@ -252,6 +331,11 @@
   $('takePhotoBtn').addEventListener('click', async () => {
     const video = $('cameraVideo'); if (!video.videoWidth || !cameraType) return;
     const type = cameraType;
+    if (type === 'id' && !isLandscapeIdFrameReady(video)) {
+      syncIdLandscapeGuard();
+      showToast('Rotate the phone sideways and reopen the ID camera before capturing.', 'warning');
+      return;
+    }
     const canvas = $('captureCanvas');
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
     let ocrSources = [];
@@ -279,7 +363,7 @@
 
       closeCamera();
       setPhotoStage(type, savedPhoto);
-      showToast('Saved the same landscape view shown by the camera. Reading the ID automatically…', 'success');
+      showToast('Saved a landscape crop matching the camera guide. Reading the ID automatically…', 'success');
       runIdOcr(ocrSources);
       return;
     }

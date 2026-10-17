@@ -47,3 +47,11 @@ CURRENT CAPTURE FIX (v7)
 - A wider, uncropped source frame is used only as a secondary OCR attempt; it is not used as the saved ID preview.
 - After uploading updates to GitHub Pages, close the old phone tab and open the site again so the new service-worker cache can activate.
 - OCR can still misread text; verify the student number, name, and program manually.
+
+
+LANDSCAPE ID CAPTURE UPDATE
+- The ID camera requests a landscape video ratio matching a school ID card.
+- On mobile, rotate the phone sideways before capturing. If the browser cannot lock orientation, a notice is shown and capture remains paused while the screen or camera feed is portrait.
+- If you are opening the page inside Messenger, use the menu to open the website in Chrome for more reliable camera/orientation behavior.
+- After uploading changed files, close the old browser tab and reopen the site. The service worker cache version has been updated.
+- This is a browser demo. The camera, OCR and approval flow are not proof of identity and still require manual checking.
