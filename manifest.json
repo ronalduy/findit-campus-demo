@@ -1,26 +1,46 @@
 {
-  "id": "./index.html",
-  "name": "FindIT Campus \u2014 School Lost & Found",
+  "id": "./",
+  "name": "FindIT Campus - Ave Maria College Lost & Found",
   "short_name": "FindIT Campus",
-  "description": "School lost and found with student ID verification and Admin/Teacher approval demo.",
-  "start_url": "./index.html",
+  "description": "Ave Maria College lost-and-found and student verification demo.",
+  "start_url": "./index.html?source=pwa",
   "scope": "./",
   "display": "standalone",
-  "orientation": "portrait",
-  "background_color": "#060b13",
-  "theme_color": "#060b13",
+  "display_override": [
+    "standalone",
+    "minimal-ui"
+  ],
+  "orientation": "any",
+  "background_color": "#f5f8fc",
+  "theme_color": "#07152d",
+  "categories": [
+    "education",
+    "productivity"
+  ],
   "icons": [
     {
-      "src": "icons/icon-192.png",
+      "src": "./icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
-      "src": "icons/icon-512.png",
+      "src": "./icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "./icons/icon-180.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
     }
   ]
 }

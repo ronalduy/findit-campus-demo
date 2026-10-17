@@ -1,161 +1,33 @@
-FINDIT CAMPUS - SCHOOL LOST AND FOUND MANAGEMENT SYSTEM
-======================================================
-Version: Academic prototype v1.0
-Stack: PHP + MySQL/MariaDB + HTML/CSS/JavaScript + XAMPP
-Editor: Visual Studio Code
+FINDIT CAMPUS — GITHUB PAGES BRANDING + INSTALL BUTTON FIX
 
-IMPORTANT
----------
-This is a real PHP/MySQL project starter, not a static GitHub Pages site. PHP pages must run through Apache and MySQL in XAMPP. GitHub Pages cannot run PHP or connect to a MySQL database.
+THIS PACKAGE IS FOR YOUR EXISTING GITHUB PAGES STATIC DEMO.
+It contains root-level website files. Upload the CONTENTS of this folder directly to the root of your repository (not this enclosing folder).
 
-The system contains:
-- Student registration with live school ID capture and live selfie capture
-- Browser OCR attempt to suggest Student ID Number, Name, and Program
-- Editable student information fields
-- Student applications stay Pending until Admin/Teacher review
-- Admin can Approve, Reject, or Request Correction
-- Students can check application status and resubmit corrections
-- Student pages have two main navigation links: Lost Items and Found Items
-- Admin can post and edit lost reports and found items with photos
-- Found-item claiming is in person at the school office
-- Admin can record handovers; the found item becomes Returned
-- Admin dashboard summaries, CSV reports, and activity logs
-- Password hashing, role checks, CSRF tokens, login lockout, session idle timeout
-- Private storage for ID images and selfies
+WHAT IS FIXED
+- Replaces the blue F placeholder mark with the Ave Maria College seal in the system header, camera header, in-page mockup, and PWA app icons.
+- Adds a visible blue “Install App” button in the top bar, including on phone-sized screens.
+- Clicking Install App opens the native install prompt when the browser supplies one.
+- If the page is open inside Messenger or another in-app browser, it explains how to open Chrome/Safari to install.
+- Includes a PWA manifest and a fresh service-worker cache version.
+- Keeps the existing FindIT Campus camera-registration demo and item demo.
 
-REQUIREMENTS
-------------
-1. XAMPP with Apache, MySQL/MariaDB, and PHP 8.1 or newer recommended.
-2. A modern browser (Chrome or Edge recommended).
-3. Internet access for the optional Tesseract.js OCR library. If the library cannot load, the student can type/correct the fields manually.
-4. Camera permission. The camera works on localhost, or on an HTTPS site. Ordinary HTTP from another device on a LAN may block camera access.
+HOW TO UPLOAD TO GITHUB PAGES
+1. Extract this ZIP.
+2. Open your repository: ronalduy/findit-campus-demo.
+3. Select Add file > Upload files.
+4. Open the extracted folder and upload these files directly into repository root: index.html, styles.css, app.js, manifest.json, pwa-install.js, sw.js, README.txt, plus the assets/ and icons/ folders.
+5. Commit changes to main.
+6. Wait for the green github-pages deployment in the repository. Open the Pages site in Chrome on Android or Safari on iPhone.
 
-INSTALL ON WINDOWS / XAMPP
---------------------------
-1. Extract the FindIT_Campus_XAMPP_System folder.
-2. Copy the whole folder to: C:\xampp\htdocs\FindIT_Campus_XAMPP_System
-3. Open XAMPP Control Panel and start Apache and MySQL.
-4. Open http://localhost/phpmyadmin in your browser.
-5. Click Import. Select this file:
-      C:\xampp\htdocs\FindIT_Campus_XAMPP_System\database\findit_campus.sql
-   Click Import/Go and wait until phpMyAdmin says the import succeeded.
-6. Open config.php in VS Code. The default local settings are:
-      DB_HOST = 127.0.0.1
-      DB_NAME = findit_campus
-      DB_USER = root
-      DB_PASS = '' (blank)
-   Change DB_PASS if your local MySQL root account has a password.
-7. Open the system:
-      http://localhost/FindIT_Campus_XAMPP_System/
-8. Admin demo login:
-      Username: admin
-      Password: 1234
-9. Immediately sign in as admin, open Password in the top bar and change the demo password before using real data.
-10. Register a fictional/sample student using a sample ID. The student cannot sign in until approved by Admin/Teacher.
+IMPORTANT PWA INSTALL NOTES
+- This is a Progressive Web App install, not an APK download.
+- On Android Chrome, clicking Install App should open the native install prompt when available; otherwise follow the browser-menu instructions shown by the button.
+- On iPhone/iPad, open the site in Safari, tap Share > Add to Home Screen.
+- Messenger’s in-app browser commonly blocks installation; open the site externally in Chrome/Safari.
+- A PWA install button cannot force installation if the browser does not allow it. This package keeps the button visible and explains the fallback steps.
 
-WARNING ABOUT SQL IMPORT
-------------------------
-The supplied SQL file drops/recreates the FindIT Campus tables so that it can make a clean first install. Re-importing it later will delete all FindIT Campus accounts, items, handover records, and logs. Export a backup first if you already have data. Do not run it against any other database.
-
-REGISTRATION FLOW
------------------
-1. Student captures a school ID using the browser camera. No gallery file input is present on the registration capture form.
-2. The browser makes a landscape crop from the visible ID viewfinder and tries OCR using Tesseract.js.
-3. Student ID Number, Name, and Program may be suggested. OCR is not guaranteed to be accurate; the student must review and correct the fields.
-4. Student captures a live selfie with the portrait oval guide.
-5. Student enters a password and acknowledges the school's privacy notice.
-6. The application is stored with status Pending.
-7. Admin/Teacher checks the ID photo, selfie, and the official school record, then Approves, Rejects, or Requests Correction.
-8. If correction is requested, the student uses the “Check application / update requested details” link on the sign-in page, verifies the Student ID and password, edits details/photos as needed, and resubmits.
-9. Approved students sign in with Student ID Number and password.
-
-ITEM WORKFLOW
--------------
-- Admin/Teacher posts both Lost reports and Found items.
-- Only staff should post found items after confirming the physical item is held safely by the school.
-- Students can browse the Lost Items and Found Items pages and search records.
-- A student who recognizes a found item visits the school Admin/Teacher in person with the reference code.
-- Staff verify ownership. They then record the handover on Handover Records.
-- A handover updates the Found item to Returned. If a related Lost report is selected, that report becomes Closed.
-- Students cannot mark items Returned themselves or claim items online.
-
-PHOTO AND PRIVACY NOTES
------------------------
-- Registration ID and selfie photos are stored under storage/private and served by private_media.php only after access checks.
-- The storage folder includes Apache .htaccess restrictions. Keep Apache configured to honor .htaccess. Do not move sensitive photos into a public web folder.
-- Item photos are also stored privately and are served to signed-in users.
-- This package includes a DRAFT privacy notice. School management / the Data Protection Officer must replace the bracketed retention/contact placeholders and approve the final text before real student use.
-- The web camera capture and OCR do not perform biometric face matching or liveness detection. Admin/Teacher must verify the details against an official school record. Do not use the demo to make identity decisions automatically.
-- Use sample/fake ID information while testing. Do not place real student images or information in a public GitHub repository.
-
-SECURITY AND PRODUCTION LIMITS
-------------------------------
-This is an academic prototype for local development. Before school-wide deployment, the school must:
-- Change the default admin password.
-- Configure HTTPS and secure hosting.
-- Review file permissions, backups, retention, deletion, and access policies.
-- Have its privacy notice and consent process reviewed by the school.
-- Test camera behavior on target devices and test the complete account workflow.
-- Add a formal account recovery process and any school-required identity checks.
-- Ensure uploaded pictures are backed up together with the database and that restoration has been tested.
-
-FILE GUIDE
-----------
-index.php                         Login page
-register.php                      Student registration / ID camera / selfie camera
-register_action.php               Validates and creates pending registration
-application-status.php             Student checks status / corrects requested details
-application-correction-action.php  Saves application correction
-admin-dashboard.php               Admin dashboard
-admin-applications.php            Verify applications
-application_action.php             Approve/reject/request correction
-admin-items.php                    Create/edit records and update status
-lost-items.php                    Student Lost Items navigation
-found-items.php                   Student Found Items navigation
-item.php                          Item details and in-person claim instructions
-handovers.php                     Record physical item handover
-reports.php                       Item reports and activity logs
-export_reports.php                CSV export
-private_media.php                 Access-controlled private image delivery
-change-password.php               Change current password
-privacy.php                       Draft privacy notice
-config.php                        Database and session settings
-functions.php                     Shared helpers and page layout
-assets/styles.css                UI styling
-assets/app.js                    Camera crop, OCR, and UI interactions
-database/findit_campus.sql        Database schema and demo admin/sample items
-storage/private/                  Private photo storage; keep this protected
-
-KNOWN LIMITATIONS
------------------
-- OCR varies by ID design, camera quality, lighting, glare, and text size. The user must check all extracted fields.
-- Capturing a photo with the camera does not prove that the person is live or matches the ID.
-- Login protection in this local prototype has basic lockout behavior, but it should receive a security review before public hosting.
-- There is no automated scheduled deletion of registration photos in this version. School retention and secure-deletion procedures must be defined and followed.
-- Demo item records in the SQL file are fictional examples.
-
-
-PHONE USE AND INSTALL AS AN APP (PWA)
--------------------------------------
-This version uses the supplied Ave Maria College seal as the system logo, browser favicon, and installed-app icon. A visible "Install App" button appears on the sign-in page.
-
-What the Install App button does:
-- Android Chrome/compatible browsers: when the browser says the site is installable, the button opens the browser's install confirmation. After the user accepts, FindIT Campus is added to the phone's app list/home screen. This is a PWA install; it is not a downloaded APK file.
-- iPhone/iPad: Safari does not provide the same JavaScript install prompt. The button explains how to use Share > Add to Home Screen.
-- In-app browsers such as Messenger may block the install prompt. Open the site in Chrome (Android) or Safari (iPhone) first.
-- If the browser has not made the site installable yet, the button explains how to use the browser menu's Install app / Add to Home screen option.
-
-Required for real phone installation:
-1. Host the PHP + MySQL project on a server that supports PHP and MySQL/MariaDB and uses HTTPS. GitHub Pages cannot run this PHP application.
-2. Keep manifest.webmanifest, service-worker.js, assets/pwa.js, assets/icons/, and assets/brand/ave-maria-college-logo.png at the provided paths.
-3. Use the homepage sign-in page and tap Install App. The browser must approve the install; a webpage cannot silently force-install an app.
-4. On Android, use Chrome or another compatible browser. On iPhone, open the HTTPS link in Safari, tap Share, choose Add to Home Screen, enable Open as Web App if displayed, and tap Add.
-5. PWA installation adds a home-screen/app-list icon and app-like window. PHP pages and MySQL-backed data still need the hosted server online. This is not an APK or a fully offline native app.
-
-The install button may not show a native confirmation if the website is not served over HTTPS, its manifest/icons are not available, the browser does not support the install prompt, or the app is already installed. The visible button then provides browser-specific instructions.
-
-LOGO
-----
-The school seal provided for this project is stored at assets/brand/ave-maria-college-logo.png and used in the main site header, login panel, camera brand, favicon, and app icons. If the school supplies an updated official logo, replace the brand image and regenerate the icon files before release.
-
-Use sample/fake student data during tests. Do not upload school ID photos, selfie images, student records, database exports, or credentials to a public GitHub repository.
+LIMITS
+- GitHub Pages hosts static HTML/CSS/JavaScript only. It does not run PHP or MySQL.
+- Registration, admin approval, and items in this GitHub Pages version remain browser-local demo data, not shared server records.
+- Do not publish actual student ID or selfie images in this public repository.
+- OCR uses Tesseract.js from a CDN and requires internet access.

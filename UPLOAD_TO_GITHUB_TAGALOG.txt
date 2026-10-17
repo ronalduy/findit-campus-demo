@@ -1,0 +1,17 @@
+PAANO I-UPDATE ANG LIVE GITHUB PAGES WEBSITE
+
+1. I-download ang FindIT_Campus_GitHub_Pages_Brand_Install_Fix.zip at Extract All.
+2. Buksan ang extracted folder. Dapat makita mo kaagad ang index.html, styles.css, app.js, manifest.json, pwa-install.js, at sw.js. Mayroon ding assets at icons folders.
+3. Sa GitHub repository na ronalduy/findit-campus-demo, pumunta sa Code tab.
+4. Click Add file > Upload files.
+5. Sa extracted folder, piliin ang lahat ng files at folders (Ctrl+A) at i-drag sa upload area.
+   IMPORTANT: Ang laman ang i-upload, hindi ang enclosing folder. Dapat nasa repository root ang index.html.
+6. Sa ibaba, click Commit changes at piliin ang main branch.
+7. Hintaying pumasa ang github-pages deployment. Puwede itong makita sa kanang Deployments area o Settings > Pages.
+8. Sa phone, huwag buksan sa Messenger in-app browser kung mag-i-install. Pindutin ang three dots at piliin ang Open in Chrome / Open in browser.
+9. Buksan ang website sa Chrome. Makikita ang Install button sa header. Tap Install App; kung walang native prompt, sundin ang instructions na lalabas. Sa iPhone, Safari > Share > Add to Home Screen.
+10. Kung lumang logo pa rin ang makita, isara ang website tab at buksan ulit. Kung kailangan, clear site data/cache para sa ronalduy.github.io, pagkatapos reload.
+
+NOTE:
+- Public ang GitHub repository. Huwag mag-commit ng totoong school ID photos, selfie photos, password, o personal student records.
+- GitHub Pages version ito para sa demo. Hindi nito pinapatakbo ang PHP/MySQL backend. Real shared student accounts require PHP/MySQL hosting.

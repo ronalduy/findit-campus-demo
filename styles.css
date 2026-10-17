@@ -208,3 +208,47 @@
   .idcam-privacy-note{padding-bottom:6px}
   .idcam-face-guide{height:32dvh;min-height:155px}
 }
+
+
+/* Ave Maria College branding + always-visible PWA install control (GitHub Pages edition) */
+.brand-mark{border-radius:50%;overflow:hidden;background:#07152d;border:2px solid #f5c400;box-shadow:0 4px 12px rgba(10,27,53,.16);flex:0 0 auto}
+.brand-mark img{display:block;width:100%;height:100%;object-fit:contain;background:#07152d}
+.tiny-brand{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;overflow:hidden;background:#07152d;border:1px solid #f0c400}
+.tiny-brand img{width:100%;height:100%;display:block;object-fit:contain}
+.welcome-decoration{display:flex;align-items:center;justify-content:center;width:50px;height:50px;border-radius:50%;overflow:hidden;background:#07152d;border:2px solid #f0c400;flex-shrink:0}
+.welcome-decoration img{width:100%;height:100%;object-fit:contain;display:block}
+.idcam-brand-logo{display:block;width:39px;height:39px;border-radius:50%;object-fit:contain;background:#07152d;border:2px solid #f4c400;flex:0 0 auto}
+.install-app-btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:40px;padding:0 14px;border:1px solid #1e4fe4;border-radius:12px;background:linear-gradient(110deg,#174eea,#4a68f4);color:#fff;font-weight:900;font-size:11px;box-shadow:0 7px 18px rgba(55,82,225,.18);white-space:nowrap;transition:transform .16s,filter .16s}
+.install-app-btn:hover{filter:brightness(1.06);transform:translateY(-1px)}
+.install-app-btn>span:first-child{font-size:19px;line-height:1;font-weight:700}
+.install-label-short{display:none}
+.install-app-btn[aria-busy="true"]{opacity:.72;pointer-events:none}
+.install-help{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:18px;isolation:isolate}
+.install-help.hidden{display:none!important}
+.install-help-backdrop{position:absolute;inset:0;z-index:0;border:0;background:rgba(4,10,23,.70);backdrop-filter:blur(8px);width:100%;height:100%}
+.install-help-card{position:relative;z-index:1;width:min(470px,100%);max-height:min(86dvh,720px);overflow:auto;border:1px solid #dfe6f3;border-radius:24px;background:#fff;color:#14243e;box-shadow:0 30px 90px rgba(0,0,0,.34);padding:30px 26px 24px;text-align:center;animation:installCardIn .22s ease-out}
+.install-help-close{position:absolute;right:13px;top:13px;width:36px;height:36px;border:0;border-radius:11px;background:#f0f3f8;color:#51627b;font-size:23px;line-height:1}
+.install-help-logo{display:block;width:76px;height:76px;margin:0 auto 13px;border-radius:50%;object-fit:contain;background:#07152d;border:3px solid #f4c400}
+.install-help-kicker{display:block;color:#4565ed;font-size:10px;font-weight:900;letter-spacing:2px}
+.install-help-card h2{font:800 25px 'Manrope',sans-serif;letter-spacing:-.7px;margin:9px 0}
+.install-help-card>p{color:#687992;font-size:13px;line-height:1.65;margin:0 auto 15px;max-width:380px}
+.install-help-steps{margin:14px 0 18px;padding:0 0 0 25px;text-align:left;color:#263a58;font-size:12px;line-height:1.7}
+.install-help-steps li{padding:3px 0 3px 3px}
+.install-help-note{border:1px solid #e4eaf5;background:#f5f8fd;border-radius:12px;padding:11px 12px!important;font-size:10px!important;margin-bottom:18px!important}
+@keyframes installCardIn{from{opacity:.45;transform:translateY(8px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
+@media(max-width:760px){
+  .topbar{gap:8px;padding-left:12px;padding-right:12px}
+  .brand{gap:7px;min-width:0}
+  .brand-mark{width:35px;height:35px}
+  .brand-copy strong{font-size:14px;letter-spacing:-.4px}
+  .brand-copy small{font-size:7px;letter-spacing:.7px}
+  .topbar-right{gap:5px;flex:0 0 auto}
+  .topbar-right>span{display:none!important}
+  .install-app-btn{min-height:35px;padding:0 10px;border-radius:10px;font-size:10px;gap:5px}
+  .install-app-btn>span:first-child{font-size:17px}
+  .install-label-long{display:none}
+  .install-label-short{display:inline}
+  .install-help-card{padding:26px 20px 20px;border-radius:21px}
+  .install-help-card h2{font-size:23px}
+}
+@media(max-width:360px){.brand-copy strong{font-size:12px}.brand-copy small{font-size:6px}.brand-mark{width:31px;height:31px}.install-app-btn{padding:0 8px}}
