@@ -1,0 +1,17 @@
+PAANO I-UPDATE ANG FINDIT CAMPUS SA GITHUB PAGES
+
+1. I-extract ang ZIP sa computer.
+2. Buksan ang repository mo sa GitHub, halimbawa findit-campus-demo.
+3. Code > Add file > Upload files.
+4. Buksan ang extracted FindIT_Campus_Final_Demo folder. Piliin ang LAHAT NG LAMAN nito (Ctrl+A sa loob ng folder), hindi ang folder mismo.
+5. I-upload diretso sa main repository root. Dapat nasa root ang index.html, styles.css, app.js, manifest.json, sw.js, README.txt, favicon-32.png, at folders na assets at icons.
+6. I-click ang Commit changes sa main branch.
+7. Pumunta sa Settings > Pages. Source: Deploy from a branch; Branch: main; Folder: /(root). Hintayin ang green github-pages deployment.
+8. Buksan ang reset-cache.html page kung kasama ito, o isara ang lumang tab at buksan sa bagong Chrome tab. Kung may lumang PWA na naka-install, uninstall muna ang lumang icon at i-install ulit pagkatapos ng update.
+
+DEMO LOGIN
+Admin: admin / 1234
+Student: 2026-0001 / student123
+
+PAALALA
+Walang database ang demo na ito. Ang data ay nasa browser storage lang at hindi nagsha-share sa phone at laptop. Huwag gumamit ng tunay na school ID, selfie, o sensitive student data sa public GitHub Pages demo.
