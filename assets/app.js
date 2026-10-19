@@ -87,7 +87,7 @@
     stepLabel.textContent = captureKind === 'id' ? 'STEP 1 · SCHOOL ID' : 'STEP 2 · LIVE SELFIE';
     $('camera-bottom-title').textContent = captureKind === 'id' ? 'Keep the ID steady' : 'Look straight ahead';
     $('camera-bottom-copy').textContent = captureKind === 'id' ? 'Avoid glare and keep all four corners inside the guide.' : 'Use even lighting; remove hats or anything covering your face.';
-    $('camera-switch').hidden = false;
+    $('camera-switch').hidden = true;
 
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       showCameraError('This browser cannot open the camera. Open the website in Chrome or Safari over HTTPS, or use localhost in development.');
@@ -136,10 +136,7 @@
     if (event.key === 'Escape' && !cameraModal.hidden) modalClose();
   });
 
-  $('camera-switch').addEventListener('click', async () => {
-    facing = facing === 'environment' ? 'user' : 'environment';
-    await startCamera();
-  });
+  // Camera roles are fixed for consistency: rear camera for ID, front camera for selfie.
 
   // object-fit: cover maps the raw source into the full stage, cropping its overflow.
   // We use the exact rendered scale and offsets to map the viewfinder back to source pixels.

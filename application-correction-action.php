@@ -7,8 +7,9 @@ $userId = (int)($_SESSION['correction_user_id'] ?? 0);
 if (!$userId) { set_flash('danger','Check your application status first.'); redirect('application-status.php'); }
 $stmt = $pdo->prepare("SELECT * FROM users WHERE id=? AND role='student' AND status='correction_required' LIMIT 1"); $stmt->execute([$userId]); $user = $stmt->fetch();
 if (!$user) { unset($_SESSION['correction_user_id']); set_flash('danger','This application is no longer waiting for correction.'); redirect('application-status.php'); }
-$studentId = trim((string)($_POST['student_id'] ?? '')); $fullName = trim((string)($_POST['full_name'] ?? '')); $program = trim((string)($_POST['program'] ?? '')); $consent = isset($_POST['consent_privacy']) ? 1 : 0;
-if (!preg_match('/^[A-Za-z0-9][A-Za-z0-9 .\/-]{2,79}$/', $studentId) || strlen($fullName)<3 || strlen($program)<2 || !$consent) { set_flash('danger','Check the Student ID, full name, program, and privacy confirmation.'); redirect('application-status.php'); }
+$fullName = trim((string)($_POST['full_name'] ?? '')); $program = trim((string)($_POST['program'] ?? '')); $yearLevel = trim((string)($_POST['year_level'] ?? '')); $consent = isset($_POST['consent_privacy']) ? 1 : 0;
+$studentId = (string)$user['student_id'];
+if (strlen($fullName)<3 || strlen($program)<2 || !in_array($yearLevel, ['SHS','1st Year','2nd Year','3rd Year','4th Year'], true) || !$consent) { set_flash('danger','Check the Student ID, full name, program, and privacy confirmation.'); redirect('application-status.php'); }
 $dupe = $pdo->prepare('SELECT id FROM users WHERE student_id=? AND id<>? LIMIT 1'); $dupe->execute([$studentId,$userId]);
 if ($dupe->fetch()) { set_flash('danger','That Student ID is already assigned to another account. Contact the school office.'); redirect('application-status.php'); }
 $newIdPath = null; $newSelfiePath = null;
@@ -17,8 +18,8 @@ try {
     if ($idData !== '') $newIdPath = save_image_data_url($idData,'registrations','school_id');
     if ($selfieData !== '') $newSelfiePath = save_image_data_url($selfieData,'registrations','selfie');
     $pdo->beginTransaction();
-    $update = $pdo->prepare("UPDATE users SET student_id=?, full_name=?, program=?, status='pending', review_note=NULL, reviewed_by=NULL, reviewed_at=NULL, consent_privacy=?, id_photo_path=COALESCE(?,id_photo_path), selfie_photo_path=COALESCE(?,selfie_photo_path) WHERE id=?");
-    $update->execute([$studentId,$fullName,$program,$consent,$newIdPath,$newSelfiePath,$userId]);
+    $update = $pdo->prepare("UPDATE users SET full_name=?, program=?, year_level=?, status='pending', review_note=NULL, reviewed_by=NULL, reviewed_at=NULL, consent_privacy=?, id_photo_path=COALESCE(?,id_photo_path), selfie_photo_path=COALESCE(?,selfie_photo_path) WHERE id=?");
+    $update->execute([$fullName,$program,$yearLevel,$consent,$newIdPath,$newSelfiePath,$userId]);
     audit($pdo,$userId,'student_application_resubmitted','user',$userId,'Application corrected and resubmitted for review');
     $pdo->commit();
     if ($newIdPath && $user['id_photo_path'] && is_file(__DIR__.'/storage/private/'.$user['id_photo_path'])) @unlink(__DIR__.'/storage/private/'.$user['id_photo_path']);

@@ -1,0 +1,14 @@
+FINDIT CAMPUS XAMPP PACKAGE — BUILD QA REPORT
+=============================================
+Checks completed during packaging:
+- PHP syntax check: all PHP files passed `php -l`.
+- JavaScript syntax check: assets/app.js, assets/pwa.js, and sw.js passed `node --check`.
+- Key files: SQL schema, manifest, private storage protection, connection-test.php, admin-settings.php, admin-accounts.php, recycle-bin.php, delete-account.php, and handover deletion action are present.
+- SQL schema includes the connection_tests table and recycle-bin archive table.
+- Seeded Admin hash verified locally against password 1234.
+
+Not run from this build environment:
+- A live MySQL import or PHP/MySQL end-to-end test, because this environment does not have the MySQL PDO driver or a running XAMPP/MySQL service.
+- A real phone/laptop LAN connection or physical camera test. Use the included Phone / Laptop Test page on your own XAMPP installation to verify the shared database connection.
+
+Do not describe those unrun device/database tests as passed until you execute them on your XAMPP laptop and phone.

@@ -1,65 +1,61 @@
-FINDIT CAMPUS BASIC TEST CHECKLIST
-==================================
-Mark each result only after running the test. Do not report a test as passed before executing it.
+FINDIT CAMPUS LIVE XAMPP TEST CHECKLIST
+======================================
+Record a test as passed only after doing it on the target devices.
+
+INSTALL / DATABASE
+[ ] Apache starts in XAMPP
+[ ] MySQL starts in XAMPP
+[ ] SQL imports without errors
+[ ] Admin can sign in with admin / 1234 on first setup
+[ ] Admin password is changed before public/real use
+[ ] Connection test page shows a valid database connection
+
+PHONE / LAPTOP SHARED CONNECTION
+[ ] Phone and laptop are on the same Wi-Fi
+[ ] Laptop opens the app with localhost
+[ ] Phone opens connection-test.php using the laptop IPv4 address
+[ ] Phone submits the temporary code
+[ ] Laptop shows Phone connected within a few seconds
+[ ] Student application submitted on phone appears in Admin queue within about 5 seconds
+[ ] Admin approval on laptop changes account status on phone after refresh/re-check
+[ ] Newly posted item on laptop appears on phone when its list is refreshed
+[ ] The camera is tested separately over HTTPS on the phone (plain LAN HTTP may block it)
 
 AUTHENTICATION / REGISTRATION
-[ ] Open login page using localhost
-[ ] Invalid login shows a safe error
-[ ] Five failed login attempts trigger a temporary lock
-[ ] Registration requires student ID, name, program, password, ID photo, selfie and privacy acknowledgement
-[ ] Browser camera permission denied displays a helpful message
-[ ] Captured ID preview matches the viewfinder crop
-[ ] Captured selfie preview keeps the face centered in portrait crop
-[ ] OCR suggestions are editable
-[ ] OCR-unreadable fields can be typed manually
-[ ] Duplicate Student ID is rejected
-[ ] Newly submitted student status is Pending
+[ ] Invalid login gives a safe message
+[ ] Three failed logins trigger a one-minute lockout
+[ ] Registration requires ID photo, live selfie, details, password, privacy acknowledgement
+[ ] Camera permission denied shows a useful error
+[ ] Saved ID review image matches the landscape viewfinder crop
+[ ] Saved selfie remains upright and matches the portrait crop
+[ ] OCR results are editable; unclear text can be entered manually
+[ ] Duplicate active Student ID is rejected
+[ ] New student registration is Pending until reviewed
 [ ] Pending student cannot log in
-[ ] Admin sees ID and selfie photos in the application queue
-[ ] Admin approval allows student login
-[ ] Rejected application cannot log in
-[ ] Correction-required application can update and resubmit details/photos
-[ ] Student cannot open admin pages directly
-[ ] Session expires after 30 minutes of inactivity
-[ ] Password can be changed after login
+[ ] Admin can approve, reject, or request correction
+[ ] Request Correction preserves the application/password/Student ID and allows resubmission
+[ ] Reject removes active application so the same ID can be used for a new registration; rejected entry stays in Recycle Bin until expiry
+[ ] Student can change password and delete their own account after confirmation
+[ ] Admin can change username and password
+[ ] Admin can delete student accounts to Recycle Bin
 
-ITEMS / CLAIMS / REPORTS
-[ ] Admin creates a Lost report with a photo
-[ ] Admin creates a Found item with a photo
-[ ] Unique reference is generated
-[ ] Student sees only Lost Items and Found Items as main navigation
-[ ] Search by keyword and category works
-[ ] Item image is only served to a signed-in user
-[ ] Item detail shows reference and in-person claim instructions
-[ ] Handover rejects unavailable/already returned item
-[ ] Handover saves claimant, staff, date and notes
-[ ] Found item becomes Returned after handover
-[ ] Linked Lost report becomes Closed after handover when selected
-[ ] CSV export opens correctly in spreadsheet software
-[ ] Activity logs show important admin actions
-[ ] Private ID/selfie photo URL is blocked to a student who is not the owner
-[ ] Backup/restore procedure is followed and checked manually
+ITEMS / HANDOVER / RECYCLE BIN
+[ ] Admin creates Lost report and Found item with unique reference number
+[ ] Admin can change Lost item status (Open/Matched/Closed)
+[ ] Admin can change Found item status (Available/Claim Under Review)
+[ ] A Lost item cannot be handed over as a Found item
+[ ] Handover form validates claimant name and captures Student ID if applicable
+[ ] Successful handover marks the Found item Returned and hides it from available Found list
+[ ] Delete handover history moves the handover row to Recycle Bin; item remains Returned
+[ ] Delete item moves the item and dependent handover history to Recycle Bin
+[ ] Recycle Bin has separate Deleted Items/Handovers and Deleted Accounts tabs
+[ ] Item/account can be restored when IDs and references are not already in use
+[ ] Recycle Bin records older than 30 days are purged during an Admin page visit
+[ ] Activity log records administrative actions
+[ ] CSV report export opens correctly in spreadsheet software
+[ ] Private ID/selfie media is unavailable to unrelated students
 
-
-PWA / PHONE TESTS
------------------
-[ ] On a phone, confirm the page layout fits small screens without horizontal overflow.
-[ ] On HTTPS hosting, confirm service-worker registration succeeds.
-[ ] Android Chrome: confirm Install/Add to Home Screen option appears when browser criteria are met.
-[ ] iPhone Safari: confirm Add to Home Screen launches the app-style shortcut.
-[ ] Confirm PHP pages and private ID/selfie images are not cached by the service worker.
-[ ] Confirm camera permissions work over HTTPS on target phones.
-[ ] Confirm sign-in, approval, item pages, and handover still use the live server.
-
-
-PWA INSTALL / LOGO CHECKS
--------------------------
-[ ] Ave Maria College seal appears in the main site header and sign-in panel.
-[ ] Browser tab favicon and installed-app icon show the school seal.
-[ ] Install App button is visible on the signed-out landing page.
-[ ] On an installable Android HTTPS deployment, tapping Install App opens the browser's install prompt.
-[ ] On iPhone Safari, tapping Install App explains Share > Add to Home Screen.
-[ ] In an in-app browser, install help recommends opening in Chrome/Safari.
-[ ] After installation, the app opens in standalone mode with the correct title and icon.
-[ ] Service worker caches only public static assets and never PHP pages or private photos.
-[ ] Updated service worker version replaces older cached icon and style assets.
+LIMITATIONS TO UNDERSTAND
+[ ] Admin auto-refresh runs every 5 seconds; it is polling, not WebSocket push
+[ ] Browser camera usually needs HTTPS on a phone when using a LAN IP
+[ ] This is a project prototype; complete school privacy/security review before real deployment

@@ -36,6 +36,7 @@ render_header('Student registration');
           <div class="field full-field"><label for="student_id">Student ID Number <span class="required">*</span></label><input id="student_id" name="student_id" required maxlength="80" placeholder="Example: 2026-00123" autocomplete="off"><small class="field-help" id="ocr-id-help">Will be filled after the ID photo is captured.</small></div>
           <div class="field full-field"><label for="full_name">Full Name <span class="required">*</span></label><input id="full_name" name="full_name" required maxlength="160" placeholder="Your name as shown on the school ID" autocomplete="name"><small class="field-help" id="ocr-name-help">Check spelling and name order.</small></div>
           <div class="field full-field"><label for="program">Program / Course <span class="required">*</span></label><input id="program" name="program" required maxlength="120" placeholder="Example: BS Information Technology"><small class="field-help" id="ocr-program-help">Will be filled if the program can be read clearly.</small></div>
+          <div class="field full-field"><label for="year_level">Year Level <span class="required">*</span></label><select id="year_level" name="year_level" required><option value="">Select year level</option><option value="SHS">SHS</option><option value="1st Year">1st Year</option><option value="2nd Year">2nd Year</option><option value="3rd Year">3rd Year</option><option value="4th Year">4th Year</option></select></div>
         </div>
         <div class="section-heading form-section-heading"><div><span class="step-kicker">STEP 3 OF 3</span><h2>Secure your account</h2><p>Use a strong password that only you know.</p></div></div>
         <div class="field-grid two-col-fields">
@@ -57,7 +58,7 @@ render_header('Student registration');
 
 <div class="camera-modal" id="camera-modal" aria-hidden="true" hidden>
   <div class="camera-shell" role="dialog" aria-modal="true" aria-labelledby="camera-title">
-    <header class="camera-topbar"><a class="camera-brand"><span class="brand-mark mini brand-mark-logo"><img src="assets/brand/ave-maria-college-logo.png" alt="Ave Maria College seal"></span><span>FindIT <b>Verify</b></span></a><div class="camera-step" id="camera-step-label">STEP 1 · SCHOOL ID</div><button type="button" class="camera-close" id="camera-close" aria-label="Close camera">×</button></header>
+    <header class="camera-topbar"><a class="camera-brand"><img src="assets/brand/ave-maria-college-logo.png" alt="" class="camera-brand-logo"><span>FindIT <b>Verify</b></span></a><div class="camera-step" id="camera-step-label">STEP 1 · SCHOOL ID</div><button type="button" class="camera-close" id="camera-close" aria-label="Close camera">×</button></header>
     <div class="camera-instructions"><span class="camera-live-dot"></span><div><h2 id="camera-title">Align your school ID</h2><p id="camera-instruction">Fit the entire card inside the landscape frame. Keep all four corners visible.</p></div></div>
     <div class="camera-stage-wrap" id="camera-stage-wrap">
       <div class="camera-stage" id="camera-stage">
@@ -69,7 +70,7 @@ render_header('Student registration');
       </div>
       <div class="camera-review" id="camera-review" hidden><div class="review-tag"><span>✓</span> PHOTO CAPTURED</div><img id="review-image" alt="Captured photo preview"><div class="review-caption" id="review-caption">Check that the complete ID is clear and readable.</div><div class="ocr-status" id="ocr-status" hidden><span class="tiny-spinner"></span><span id="ocr-status-text">Reading ID text…</span></div></div>
     </div>
-    <div class="camera-bottom" id="camera-controls-live"><div class="camera-bottom-copy"><strong id="camera-bottom-title">Keep the ID steady</strong><small id="camera-bottom-copy">Avoid glare and make sure the text is sharp.</small></div><button type="button" class="capture-button" id="capture-button" aria-label="Capture photo"><span></span></button><button type="button" class="camera-switch" id="camera-switch" title="Switch camera">⇄<small>Switch</small></button></div>
+    <div class="camera-bottom" id="camera-controls-live"><div class="camera-bottom-copy"><strong id="camera-bottom-title">Keep the ID steady</strong><small id="camera-bottom-copy">Avoid glare and make sure the text is sharp.</small></div><button type="button" class="capture-button" id="capture-button" aria-label="Capture photo"><span></span></button><button type="button" class="camera-switch" id="camera-switch" title="Camera switch" hidden aria-hidden="true">⇄<small>Switch</small></button></div>
     <div class="camera-bottom camera-bottom-review" id="camera-controls-review" hidden><button type="button" class="btn btn-outline" id="retake-button">↶ Retake</button><button type="button" class="btn btn-primary" id="use-photo-button">Use photo <span>→</span></button></div>
     <div class="camera-error" id="camera-error" hidden></div>
   </div>

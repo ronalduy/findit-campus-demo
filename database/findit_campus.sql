@@ -1,23 +1,15 @@
--- FindIT Campus - MySQL/MariaDB schema for XAMPP
--- Import this file using phpMyAdmin. Demo admin login: username admin, password 1234.
--- Change the demo password before any real or public deployment.
+-- FindIT Campus final XAMPP schema (safe import: no DROP TABLE statements)
+-- For local classroom testing only. Default first-install admin: admin / 1234. Change immediately.
 CREATE DATABASE IF NOT EXISTS findit_campus CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE findit_campus;
 
-SET FOREIGN_KEY_CHECKS = 0;
-DROP TABLE IF EXISTS handover_records;
-DROP TABLE IF EXISTS items;
-DROP TABLE IF EXISTS activity_logs;
-DROP TABLE IF EXISTS login_attempts;
-DROP TABLE IF EXISTS users;
-SET FOREIGN_KEY_CHECKS = 1;
-
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   username VARCHAR(60) NULL UNIQUE,
   student_id VARCHAR(80) NULL UNIQUE,
   full_name VARCHAR(160) NOT NULL,
   program VARCHAR(120) NULL,
+  year_level VARCHAR(20) NULL,
   password_hash VARCHAR(255) NOT NULL,
   role ENUM('admin','student') NOT NULL DEFAULT 'student',
   status ENUM('pending','approved','rejected','correction_required') NOT NULL DEFAULT 'pending',
@@ -36,7 +28,12 @@ CREATE TABLE users (
   CONSTRAINT fk_users_reviewed_by FOREIGN KEY (reviewed_by) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
-CREATE TABLE items (
+-- Upgrade an earlier project database without deleting existing accounts.
+SET @findit_has_year_level = (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='findit_campus' AND TABLE_NAME='users' AND COLUMN_NAME='year_level');
+SET @findit_sql = IF(@findit_has_year_level = 0, 'ALTER TABLE users ADD COLUMN year_level VARCHAR(20) NULL AFTER program', 'SELECT 1');
+PREPARE findit_stmt FROM @findit_sql; EXECUTE findit_stmt; DEALLOCATE PREPARE findit_stmt;
+
+CREATE TABLE IF NOT EXISTS items (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   reference_code VARCHAR(32) NOT NULL UNIQUE,
   item_type ENUM('lost','found') NOT NULL,
@@ -57,7 +54,7 @@ CREATE TABLE items (
   CONSTRAINT fk_items_creator FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE RESTRICT
 ) ENGINE=InnoDB;
 
-CREATE TABLE handover_records (
+CREATE TABLE IF NOT EXISTS handover_records (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   item_id BIGINT UNSIGNED NOT NULL,
   linked_lost_item_id BIGINT UNSIGNED NULL,
@@ -74,7 +71,7 @@ CREATE TABLE handover_records (
   CONSTRAINT fk_handover_released_by FOREIGN KEY (released_by) REFERENCES users(id) ON DELETE RESTRICT
 ) ENGINE=InnoDB;
 
-CREATE TABLE activity_logs (
+CREATE TABLE IF NOT EXISTS activity_logs (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   actor_user_id BIGINT UNSIGNED NULL,
   action_name VARCHAR(100) NOT NULL,
@@ -89,7 +86,7 @@ CREATE TABLE activity_logs (
   CONSTRAINT fk_activity_actor FOREIGN KEY (actor_user_id) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
-CREATE TABLE login_attempts (
+CREATE TABLE IF NOT EXISTS login_attempts (
   login_key VARCHAR(191) NOT NULL,
   failed_attempts INT UNSIGNED NOT NULL DEFAULT 0,
   locked_until DATETIME NULL,
@@ -97,13 +94,34 @@ CREATE TABLE login_attempts (
   PRIMARY KEY (login_key)
 ) ENGINE=InnoDB;
 
--- Admin demo account. Password hash is for the password "1234".
-INSERT INTO users (username, full_name, password_hash, role, status, consent_privacy)
-VALUES ('admin', 'School Administrator', '$2y$12$LIe.j3D/qbW64rOj6/rjp.gGc.Kn6k4DRHNXTIbue8WWWTVLAexkG', 'admin', 'approved', 1);
+CREATE TABLE IF NOT EXISTS recycle_bin (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  entity_type ENUM('item','account','handover') NOT NULL,
+  original_id BIGINT UNSIGNED NULL,
+  payload_json LONGTEXT NOT NULL,
+  deleted_by BIGINT UNSIGNED NULL,
+  deleted_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_recycle_type_date (entity_type, deleted_at),
+  CONSTRAINT fk_recycle_deleted_by FOREIGN KEY (deleted_by) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
 
--- Optional fictional sample records to make the first dashboard easier to demonstrate.
-INSERT INTO items (reference_code, item_type, title, description, category, location_found_or_lost, event_date, image_path, status, created_by)
-VALUES
-('FD-2026-0001', 'found', 'Blue water bottle', 'Blue reusable water bottle found after class. Sample record only.', 'Bottle', 'Library entrance', '2026-10-15', NULL, 'available_for_claim', 1),
-('LS-2026-0001', 'lost', 'Black pencil case', 'Black pencil case with pens inside. Sample record only.', 'School supplies', 'Room 204', '2026-10-14', NULL, 'open', 1),
-('FD-2026-0002', 'found', 'Small umbrella', 'Foldable navy umbrella found near the covered court. Sample record only.', 'Accessories', 'Covered court', '2026-10-13', NULL, 'available_for_claim', 1);
+-- Safely upgrade an older recycle_bin enum to support archived handover history.
+SET @findit_recycle_type = (SELECT COLUMN_TYPE FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='findit_campus' AND TABLE_NAME='recycle_bin' AND COLUMN_NAME='entity_type' LIMIT 1);
+SET @findit_sql = IF(@findit_recycle_type IS NOT NULL AND @findit_recycle_type NOT LIKE '%handover%', "ALTER TABLE recycle_bin MODIFY entity_type ENUM('item','account','handover') NOT NULL", 'SELECT 1');
+PREPARE findit_stmt FROM @findit_sql; EXECUTE findit_stmt; DEALLOCATE PREPARE findit_stmt;
+
+CREATE TABLE IF NOT EXISTS connection_tests (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  device_label VARCHAR(30) NOT NULL,
+  test_token CHAR(32) NOT NULL,
+  sent_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_connection_test_sent (sent_at)
+) ENGINE=InnoDB;
+
+INSERT INTO users (username, full_name, password_hash, role, status, consent_privacy)
+SELECT 'admin', 'School Administrator', '$2y$12$LIe.j3D/qbW64rOj6/rjp.gGc.Kn6k4DRHNXTIbue8WWWTVLAexkG', 'admin', 'approved', 1
+WHERE NOT EXISTS (SELECT 1 FROM users WHERE role='admin');
+
+-- No sample student records or sample item reports are inserted. Create them through the application.

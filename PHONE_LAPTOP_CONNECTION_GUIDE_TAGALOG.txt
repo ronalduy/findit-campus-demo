@@ -1,0 +1,52 @@
+FINDIT CAMPUS — PHONE AT LAPTOP CONNECTION GUIDE (XAMPP)
+=======================================================
+LAYUNIN
+-------
+Parehong website at MySQL database ang gagamitin ng phone at laptop. Ang phone ay hindi dapat magbukas ng GitHub Pages para sa tunay na PHP/MySQL version; dapat gamitin nito ang PHP site na tumatakbo sa laptop.
+
+A. SETUP SA LAPTOP
+------------------
+1. I-extract ang ZIP. Ilagay ang folder na FindIT_Campus_XAMPP_System sa C:\xampp\htdocs\FindIT_Campus_XAMPP_System.
+2. Sa XAMPP Control Panel, i-Start ang Apache at MySQL.
+3. Buksan ang http://localhost/phpmyadmin at i-import ang database\findit_campus.sql.
+4. Buksan ang http://localhost/FindIT_Campus_XAMPP_System/ at mag-login bilang Admin. Sa first install: admin / 1234. Palitan agad ang password.
+5. Sa Admin menu, buksan ang Phone / Laptop Test at i-click ang Generate connection code. Iwanang bukas ang page.
+
+B. KUNIN ANG LAPTOP IP ADDRESS
+-----------------------------
+1. Sa Windows, pindutin ang Win+R, i-type ang cmd, at pindutin ang Enter.
+2. I-type ang ipconfig.
+3. Hanapin ang IPv4 Address sa aktibong Wi-Fi adapter (halimbawa, 192.168.1.25). Huwag gamitin ang Default Gateway.
+
+C. TEST SA PHONE
+----------------
+1. Ikonekta ang phone sa parehong Wi-Fi network ng laptop. Patayin muna ang mobile data kung gusto mong tiyaking Wi-Fi ang gamit.
+2. Sa Chrome, buksan ang URL sa ibaba at palitan ang IP ng IPv4 address ng laptop:
+   http://192.168.1.25/FindIT_Campus_XAMPP_System/connection-test.php?mode=phone
+3. Ilagay ang 32-character code na ipinapakita sa laptop at i-submit.
+4. Dapat lumabas sa laptop ang Phone connected. Ibig sabihin nakarating ang request mula sa phone sa PHP server ng laptop at nakasulat ito sa MySQL database na pareho nilang ginagamit.
+
+D. SUBUKAN ANG LIVE STUDENT REGISTRATION
+----------------------------------------
+1. Sa phone, buksan ang parehong base URL: http://192.168.1.25/FindIT_Campus_XAMPP_System/
+2. Mag-register gamit ang fictional ID/details. Sa production browser, maaaring hindi gumana ang camera sa HTTP LAN address.
+3. Sa laptop, buksan ang Student Approval page. Magre-refresh ito kapag nagbago ang bilang ng pending applications (polling bawat 5 segundo).
+4. I-approve ang student at subukan ang sign-in sa phone. Parehong MySQL database ang pinanggagalingan ng account status.
+
+KAPAG HINDI MABUKSAN ANG PHONE URL
+---------------------------------
+- Siguraduhing Apache at MySQL ay running.
+- Siguraduhing parehong Wi-Fi ang phone at laptop at walang guest Wi-Fi isolation.
+- Payagan ang Apache sa Windows Defender Firewall para sa Private networks lamang. Huwag i-enable ang Public network rule kung hindi kailangan.
+- Suriin kung port 80 ay ginagamit ng ibang program.
+- Huwag mag-port-forward mula router papunta sa XAMPP laptop.
+
+CAMERA SA PHONE
+---------------
+Ang camera API ay karaniwang kailangan ng secure context. Ang http://localhost ay secure para sa browser na nasa mismong laptop, ngunit ang http://192.168.x.x mula sa phone ay karaniwang hindi. Para subukan ang camera mula sa phone, gumamit lamang ng temporary HTTPS tunnel na ikaw ang nag-configure, palitan ang Admin password, gumamit ng fictional data, at isara ang tunnel pagkatapos. Huwag gumamit ng tunay na school IDs habang public ang demo.
+
+LIMITASYON
+---------
+- Ang connection-test page ay nagpapatunay na nakakonekta ang phone sa PHP/MySQL. Hindi nito mismo sinusubukan ang camera permission.
+- Admin application queue ay nagpo-poll kada 5 segundo, hindi WebSocket push.
+- Dapat parehong tumuro sa iisang PHP site ang phone at laptop; huwag gamitin ang GitHub Pages para sa PHP forms.

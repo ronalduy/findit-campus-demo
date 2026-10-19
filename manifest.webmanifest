@@ -1,40 +1,15 @@
 {
-  "id": "./index.php",
-  "name": "FindIT Campus - Ave Maria College Lost & Found",
+  "name": "FindIT Campus - Ave Maria College",
   "short_name": "FindIT Campus",
-  "description": "Ave Maria College school lost-and-found portal with verified student accounts.",
+  "description": "Ave Maria College School Lost and Found",
   "start_url": "./index.php",
   "scope": "./",
   "display": "standalone",
-  "display_override": [
-    "standalone",
-    "minimal-ui"
-  ],
-  "orientation": "any",
+  "orientation": "portrait-primary",
   "background_color": "#f4f7fc",
   "theme_color": "#071426",
-  "categories": [
-    "education",
-    "productivity"
-  ],
   "icons": [
-    {
-      "src": "assets/icons/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "assets/icons/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "assets/icons/icon-512-maskable.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
-    }
+    {"src":"assets/icons/icon-192.png","sizes":"192x192","type":"image/png","purpose":"any"},
+    {"src":"assets/icons/icon-512.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}
   ]
 }

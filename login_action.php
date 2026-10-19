@@ -14,27 +14,31 @@ $stmt = $pdo->prepare('SELECT failed_attempts, locked_until FROM login_attempts 
 $stmt->execute([$key]);
 $attempt = $stmt->fetch();
 if ($attempt && $attempt['locked_until'] && strtotime($attempt['locked_until']) > time()) {
-    set_flash('danger', 'Too many unsuccessful sign-in attempts. Please wait 15 minutes and try again.');
+    $remaining = max(1, strtotime($attempt['locked_until']) - time());
+    set_flash('danger', 'Too many unsuccessful sign-in attempts. Please wait ' . $remaining . ' second(s) and try again.');
     redirect('index.php');
 }
 $stmt = $pdo->prepare('SELECT * FROM users WHERE username = ? OR student_id = ? LIMIT 1');
 $stmt->execute([$identifier, $identifier]);
 $user = $stmt->fetch();
 if (!$user || !password_verify($password, $user['password_hash'])) {
-    $failures = (int)($attempt['failed_attempts'] ?? 0) + 1;
-    $lockedUntil = $failures >= 5 ? date('Y-m-d H:i:s', time() + 900) : null;
+    $previousFailures = (int)($attempt['failed_attempts'] ?? 0);
+    if ($attempt && !empty($attempt['locked_until']) && strtotime($attempt['locked_until']) <= time()) $previousFailures = 0;
+    $failures = $previousFailures + 1;
+    $lockedUntil = $failures >= 3 ? date('Y-m-d H:i:s', time() + 60) : null;
     $upsert = $pdo->prepare('INSERT INTO login_attempts (login_key, failed_attempts, locked_until, last_attempt_at) VALUES (?, ?, ?, NOW()) ON DUPLICATE KEY UPDATE failed_attempts = VALUES(failed_attempts), locked_until = VALUES(locked_until), last_attempt_at = NOW()');
     $upsert->execute([$key, $failures, $lockedUntil]);
     audit($pdo, $user ? (int)$user['id'] : null, 'login_failed', 'user', $user ? (int)$user['id'] : null, 'Failed sign-in attempt');
-    set_flash('danger', 'Incorrect login details. Check your ID/username and password.');
+    set_flash('danger', $failures >= 3 ? 'Three failed sign-in attempts. Please wait 1 minute before trying again.' : 'Incorrect login details. Check your ID/username and password.');
     redirect('index.php');
 }
 if ($user['role'] === 'student' && $user['status'] !== 'approved') {
-    $messages = [
-        'pending' => 'Your application is waiting for Admin/Teacher approval.',
-        'rejected' => 'Your application was rejected. Contact the school office for help.',
-        'correction_required' => 'The school requested a correction. Use the Check application / correction link on the sign-in page, or contact the school office.',
-    ];
+    if ($user['status'] === 'correction_required') {
+        $_SESSION['correction_user_id'] = (int)$user['id'];
+        set_flash('warning', 'The Admin/Teacher requested a correction. Review the note and resubmit the same application. Your account and Student ID were kept.');
+        redirect('application-status.php');
+    }
+    $messages = ['pending' => 'Your application is waiting for Admin/Teacher approval.', 'rejected' => 'This application was rejected. Submit a new application or contact the school office.'];
     set_flash('warning', $messages[$user['status']] ?? 'Your account is not approved yet.');
     redirect('index.php');
 }

@@ -1,9 +1,12 @@
-DATABASE IMPORT
-================
+DATABASE IMPORT / SETUP
+=======================
 1. Start MySQL in XAMPP.
 2. Open http://localhost/phpmyadmin.
-3. Use Import and choose findit_campus.sql.
-4. Start import. The script creates the findit_campus database and its tables.
-5. Login to the application with admin / 1234 and change the demo password.
+3. Choose Import and select database/findit_campus.sql from this project folder.
+4. Start the import and wait for the success message. The SQL creates the database and tables if missing; it does not DROP existing data.
+5. Open config.php and update DB_PASS only if your XAMPP MySQL root account has a password.
+6. Open the site at http://localhost/FindIT_Campus_XAMPP_System/.
+7. First Admin login: username admin, password 1234. Change the Admin password immediately.
+8. To check phone/laptop sharing, open Phone / Laptop Test in the Admin menu and follow the on-screen guide.
 
-CAUTION: The script drops and recreates the app tables. Do not re-import after adding records unless you intend to erase the current data. Export a backup first.
+Never publish the XAMPP server through router port forwarding. Use fictional records for testing.
