@@ -1,17 +1,20 @@
-PAANO I-UPDATE ANG FINDIT CAMPUS SA GITHUB PAGES
+FINDIT CAMPUS v7.3 — UPLOAD INSTRUCTIONS (TAGALOG)
 
-1. I-extract ang ZIP sa computer.
-2. Buksan ang repository mo sa GitHub, halimbawa findit-campus-demo.
-3. Code > Add file > Upload files.
-4. Buksan ang extracted FindIT_Campus_Final_Demo folder. Piliin ang LAHAT NG LAMAN nito (Ctrl+A sa loob ng folder), hindi ang folder mismo.
-5. I-upload diretso sa main repository root. Dapat nasa root ang index.html, styles.css, app.js, manifest.json, sw.js, README.txt, favicon-32.png, at folders na assets at icons.
-6. I-click ang Commit changes sa main branch.
-7. Pumunta sa Settings > Pages. Source: Deploy from a branch; Branch: main; Folder: /(root). Hintayin ang green github-pages deployment.
-8. Buksan ang reset-cache.html page kung kasama ito, o isara ang lumang tab at buksan sa bagong Chrome tab. Kung may lumang PWA na naka-install, uninstall muna ang lumang icon at i-install ulit pagkatapos ng update.
+Ang version na ito ay kapareho ng v7.2 camera sizing/capture layout pero tinanggal ang scanning effects sa ID at selfie.
 
-DEMO LOGIN
-Admin: admin / 1234
-Student: 2026-0001 / student123
+1. I-download at i-extract ang ZIP.
+2. Buksan ang GitHub repository na ronalduy/findit-campus-demo.
+3. Piliin ang Add file → Upload files.
+4. I-upload ang lahat ng laman ng folder na ito DIREKTA sa root/main folder ng repository; huwag ilagay sa bagong nested folder.
+5. Palitan ang existing index.html, styles.css, app.js, at sw.js kapag tinanong. Panatilihin ang assets at icons folders.
+6. I-click ang Commit changes at hintaying green/successful ang GitHub Pages deployment.
+7. Sa Chrome, buksan ang /reset-cache.html sa iyong GitHub Pages site at pindutin ang Clear old cache & reopen. Pagkatapos ay buksan ulit ang main website.
 
-PAALALA
-Walang database ang demo na ito. Ang data ay nasa browser storage lang at hindi nagsha-share sa phone at laptop. Huwag gumamit ng tunay na school ID, selfie, o sensitive student data sa public GitHub Pages demo.
+ANO ANG DAPAT MAKITA
+- Walang gumagalaw na scan beam sa ID o selfie.
+- Walang pulsing/glowing animated corners.
+- Walang dashed face scan line.
+- Mananatiling landscape ang ID frame at portrait oval ang selfie guide.
+- Mananatili ang Capture, Retake, at Use Photo controls.
+
+PAALALA: Camera test sa Chrome/Safari gamit ang HTTPS. Gumamit ng sample ID; huwag mag-test ng totoong school ID sa public demo.

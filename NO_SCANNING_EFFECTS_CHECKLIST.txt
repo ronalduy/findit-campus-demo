@@ -1,0 +1,14 @@
+NO-SCANNING-EFFECTS CHECKLIST v7.3
+
+[ ] ID camera viewfinder remains landscape.
+[ ] Selfie viewfinder remains a portrait oval.
+[ ] No moving scan beam.
+[ ] No pulsing corner animation.
+[ ] No dashed face scan line.
+[ ] Status dot is static.
+[ ] Capture opens image review.
+[ ] Retake reopens the same camera type.
+[ ] Use Photo accepts the captured preview.
+[ ] Check on an actual phone browser over HTTPS.
+
+Automated source checks only can confirm code structure/syntax; physical camera rendering must be confirmed on the target phone.
